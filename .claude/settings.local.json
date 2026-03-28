@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Write",
+      "Edit",
+      "Bash(git:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(pwd)",
+      "Bash(echo:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(touch:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "WebSearch",
+      "WebFetch",
+      "WebFetch(domain:ai.google.dev)",
+      "Bash(rm *)",
+      "Bash(del *)",
+      "Bash(curl:*)",
+      "Bash(mv *)",
+      "Edit(./**/*.config)",
+      "Edit(./**/*.conf)",
+      "Edit(./**/*.yaml)",
+      "Edit(./**/*.yml)",
+      "Edit(./**/*.json)",
+      "Edit(./config/**)",
+      "Bash(cd:*)",
+      "Skill(update-config)",
+      "Bash(python -m json.tool)"
+    ],
+    "ask": []
+  }
+}
