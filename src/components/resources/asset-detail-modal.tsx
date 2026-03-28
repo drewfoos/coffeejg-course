@@ -60,11 +60,11 @@ export function AssetDetailModal({
               </Badge>
             ))}
           </div>
-          <Button asChild className="w-full">
-            <a href={asset.externalUrl} target="_blank" rel="noopener noreferrer">
+          <a href={asset.externalUrl} target="_blank" rel="noopener noreferrer">
+            <Button className="w-full">
               View Original Source
-            </a>
-          </Button>
+            </Button>
+          </a>
         </div>
       </DialogContent>
     </Dialog>

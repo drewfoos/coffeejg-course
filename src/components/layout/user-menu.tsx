@@ -45,9 +45,9 @@ export function UserMenu({ userName }: UserMenuProps) {
           <p className="text-sm font-medium">{userName}</p>
         </div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href="/resources/favorites">My Favorites</Link>
-        </DropdownMenuItem>
+        <Link href="/resources/favorites">
+          <DropdownMenuItem>My Favorites</DropdownMenuItem>
+        </Link>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut}>Sign Out</DropdownMenuItem>
       </DropdownMenuContent>
