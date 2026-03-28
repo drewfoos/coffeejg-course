@@ -1,0 +1,182 @@
+[
+  {
+    "id": "cute-anime-avatar-base",
+    "title": "Cute Anime Avatar Base Model",
+    "artistName": "ModelMaker3D",
+    "description": "A customizable base model for creating anime-style VTuber avatars. Includes blend shapes for facial expressions and VRM compatibility.",
+    "imageUrl": "https://placehold.co/400x400/2d1b69/e94560?text=Avatar+Base",
+    "tags": ["VTuber Model", "3D", "VRM", "Anime"],
+    "source": "Booth",
+    "externalUrl": "https://booth.pm/en/items/example1"
+  },
+  {
+    "id": "warudo-scene-pack-fantasy",
+    "title": "Fantasy Scene Pack for Warudo",
+    "artistName": "SceneDesignCo",
+    "description": "A collection of fantasy-themed 3D backgrounds for Warudo, including castle, forest, and magical library scenes.",
+    "imageUrl": "https://placehold.co/400x400/1a1a2e/7c3aed?text=Fantasy+Scenes",
+    "tags": ["Background", "3D", "Warudo"],
+    "source": "Gumroad",
+    "externalUrl": "https://gumroad.com/example2"
+  },
+  {
+    "id": "free-vrm-hand-poses",
+    "title": "Free VRM Hand Pose Collection",
+    "artistName": "PoseLib",
+    "description": "30 hand poses compatible with VRM models. Includes peace signs, pointing, waving, and more.",
+    "imageUrl": "https://placehold.co/400x400/065f46/34d399?text=Hand+Poses",
+    "tags": ["Animation", "VRM", "3D"],
+    "source": "Free",
+    "externalUrl": "https://github.com/example/hand-poses"
+  },
+  {
+    "id": "cel-shader-material-pack",
+    "title": "Cel Shader Material Pack",
+    "artistName": "ShaderWizard",
+    "description": "Anime-style cel shading materials for Unity and Warudo. Includes toon lighting, outline effects, and color ramp controls.",
+    "imageUrl": "https://placehold.co/400x400/7c2d12/fb923c?text=Cel+Shaders",
+    "tags": ["Texture", "3D", "Warudo"],
+    "source": "Booth",
+    "externalUrl": "https://booth.pm/en/items/example3"
+  },
+  {
+    "id": "live2d-cat-ears-accessory",
+    "title": "Live2D Cat Ears Accessory",
+    "artistName": "2DAccessories",
+    "description": "Animated cat ears for Live2D models with physics-based movement. Multiple color variants included.",
+    "imageUrl": "https://placehold.co/400x400/831843/f472b6?text=Cat+Ears",
+    "tags": ["Accessory", "2D", "Live2D"],
+    "source": "Booth",
+    "externalUrl": "https://booth.pm/en/items/example4"
+  },
+  {
+    "id": "obs-vtuber-overlay-pack",
+    "title": "VTuber Stream Overlay Pack",
+    "artistName": "StreamDesigns",
+    "description": "Complete stream overlay set designed for VTubers. Includes webcam frame, alerts, panels, and scene transitions.",
+    "imageUrl": "https://placehold.co/400x400/1e1b4b/818cf8?text=Overlays",
+    "tags": ["Tool", "Reference"],
+    "source": "Gumroad",
+    "externalUrl": "https://gumroad.com/example5"
+  },
+  {
+    "id": "vrm-expression-reference",
+    "title": "VRM Expression Setup Reference Guide",
+    "artistName": "VTuberDocs",
+    "description": "A comprehensive visual reference for setting up VRM blend shapes and expressions. Covers all standard expressions plus custom ones.",
+    "imageUrl": "https://placehold.co/400x400/164e63/22d3ee?text=Expression+Guide",
+    "tags": ["Reference", "VRM", "3D"],
+    "source": "Free",
+    "externalUrl": "https://github.com/example/vrm-expressions"
+  },
+  {
+    "id": "anime-hair-pack-3d",
+    "title": "Anime Hair Style Pack (10 Styles)",
+    "artistName": "HairStudio3D",
+    "description": "10 anime-inspired hair models compatible with VRM avatars. Includes physics bones for natural movement.",
+    "imageUrl": "https://placehold.co/400x400/4a1d96/a78bfa?text=Hair+Pack",
+    "tags": ["Accessory", "VTuber Model", "3D", "VRM"],
+    "source": "Booth",
+    "externalUrl": "https://booth.pm/en/items/example6"
+  },
+  {
+    "id": "free-bgm-lofi-vtuber",
+    "title": "Lo-fi BGM Pack for VTubers",
+    "artistName": "ChillBeats",
+    "description": "5 royalty-free lo-fi tracks perfect for VTuber streams. Includes waiting screen music and stream BGM.",
+    "imageUrl": "https://placehold.co/400x400/1c1917/a8a29e?text=Lo-fi+BGM",
+    "tags": ["Audio"],
+    "source": "Free",
+    "externalUrl": "https://github.com/example/lofi-bgm"
+  },
+  {
+    "id": "warudo-motion-capture-guide",
+    "title": "Warudo Motion Capture Setup Guide",
+    "artistName": "TechVTuber",
+    "description": "Step-by-step guide for setting up various motion capture solutions with Warudo, including webcam, iPhone, and full-body tracking.",
+    "imageUrl": "https://placehold.co/400x400/1e3a5f/60a5fa?text=MoCap+Guide",
+    "tags": ["Reference", "Warudo", "Tool"],
+    "source": "Free",
+    "externalUrl": "https://github.com/example/warudo-mocap"
+  },
+  {
+    "id": "chibi-avatar-maker",
+    "title": "Chibi Avatar Maker Template",
+    "artistName": "ChibiCraft",
+    "description": "Customizable chibi-style VTuber model template with modular parts. Great for mascots and stream alerts.",
+    "imageUrl": "https://placehold.co/400x400/92400e/fbbf24?text=Chibi+Maker",
+    "tags": ["VTuber Model", "3D", "VRM"],
+    "source": "itch.io",
+    "externalUrl": "https://example.itch.io/chibi-maker"
+  },
+  {
+    "id": "particle-effects-warudo",
+    "title": "Particle Effects Collection for Warudo",
+    "artistName": "FXMaster",
+    "description": "Beautiful particle effects for Warudo scenes: sparkles, cherry blossoms, rain, snow, and magical auras.",
+    "imageUrl": "https://placehold.co/400x400/3b0764/c084fc?text=Particles",
+    "tags": ["Animation", "Warudo", "3D"],
+    "source": "Gumroad",
+    "externalUrl": "https://gumroad.com/example8"
+  },
+  {
+    "id": "vtuber-rigging-checklist",
+    "title": "VTuber Rigging Checklist & Best Practices",
+    "artistName": "RigPro",
+    "description": "A detailed checklist for rigging VTuber models, covering bone structure, weight painting, physics, and expression setup.",
+    "imageUrl": "https://placehold.co/400x400/14532d/4ade80?text=Rigging+Guide",
+    "tags": ["Reference", "3D", "VRM"],
+    "source": "Free",
+    "externalUrl": "https://github.com/example/rigging-checklist"
+  },
+  {
+    "id": "sound-effects-vtuber-pack",
+    "title": "VTuber Sound Effects Pack",
+    "artistName": "SFXLab",
+    "description": "50+ sound effects for VTuber streams: notification sounds, reaction SFX, transition swooshes, and cute pop sounds.",
+    "imageUrl": "https://placehold.co/400x400/3f3f46/d4d4d8?text=SFX+Pack",
+    "tags": ["Audio"],
+    "source": "itch.io",
+    "externalUrl": "https://example.itch.io/vtuber-sfx"
+  },
+  {
+    "id": "gothic-outfit-vrm",
+    "title": "Gothic Lolita Outfit for VRM",
+    "artistName": "FashionVR",
+    "description": "A detailed gothic lolita dress outfit for VRM models. Includes dress, boots, headband, and accessories.",
+    "imageUrl": "https://placehold.co/400x400/450a0a/f87171?text=Gothic+Outfit",
+    "tags": ["Accessory", "VTuber Model", "3D", "VRM"],
+    "source": "Booth",
+    "externalUrl": "https://booth.pm/en/items/example10"
+  },
+  {
+    "id": "obs-plugin-guide-vtubers",
+    "title": "Essential OBS Plugins for VTubers",
+    "artistName": "StreamTech",
+    "description": "Curated list of must-have OBS plugins for VTubers, including virtual camera tools, scene switchers, and audio filters.",
+    "imageUrl": "https://placehold.co/400x400/0c4a6e/38bdf8?text=OBS+Plugins",
+    "tags": ["Tool", "Reference"],
+    "source": "GitHub",
+    "externalUrl": "https://github.com/example/obs-plugins"
+  },
+  {
+    "id": "pastel-background-set",
+    "title": "Pastel Room Backgrounds (5 Rooms)",
+    "artistName": "BG_Artist",
+    "description": "Five cute pastel-colored room backgrounds for VTuber streams. Includes bedroom, kitchen, café, library, and garden.",
+    "imageUrl": "https://placehold.co/400x400/fdf2f8/ec4899?text=Pastel+Rooms",
+    "tags": ["Background", "2D"],
+    "source": "Gumroad",
+    "externalUrl": "https://gumroad.com/example12"
+  },
+  {
+    "id": "unity-toon-shader",
+    "title": "Unity Toon Shader (VTuber Optimized)",
+    "artistName": "ShaderLab",
+    "description": "High-performance toon shader for Unity, optimized for real-time VTuber rendering. Supports outline, rim light, and emission.",
+    "imageUrl": "https://placehold.co/400x400/312e81/6366f1?text=Toon+Shader",
+    "tags": ["Texture", "Tool", "3D"],
+    "source": "GitHub",
+    "externalUrl": "https://github.com/example/unity-toon"
+  }
+]

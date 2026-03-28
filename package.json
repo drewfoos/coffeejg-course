@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed:course": "tsx scripts/seed-course.ts",
+    "seed:assets": "tsx scripts/seed-assets.ts",
+    "seed": "tsx scripts/seed-course.ts && tsx scripts/seed-assets.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",
@@ -30,6 +33,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^17.3.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "tailwindcss": "^4",

@@ -1,0 +1,101 @@
+{
+  "id": "3d-vtubing-with-warudo",
+  "title": "3D VTubing with Warudo: Complete Guide",
+  "slug": "3d-vtubing-with-warudo",
+  "description": "Learn everything you need to start 3D VTubing with Warudo. From setting up your first model to advanced scene design, this course covers the complete workflow for becoming a professional 3D VTuber.",
+  "stripePriceId": "price_placeholder",
+  "isFree": false,
+  "thumbnailUrl": "https://placehold.co/800x450/1a1a2e/e94560?text=3D+VTubing+with+Warudo",
+  "lessons": [
+    {
+      "id": "intro-to-vtubing",
+      "title": "Introduction to VTubing",
+      "slug": "intro-to-vtubing",
+      "vimeoVideoId": "dQw4w9WgXcQ",
+      "isFree": true,
+      "order": 1,
+      "durationSeconds": 480
+    },
+    {
+      "id": "setting-up-warudo",
+      "title": "Setting Up Warudo",
+      "slug": "setting-up-warudo",
+      "vimeoVideoId": "dQw4w9WgXcQ",
+      "isFree": true,
+      "order": 2,
+      "durationSeconds": 720
+    },
+    {
+      "id": "importing-3d-model",
+      "title": "Importing Your First 3D Model",
+      "slug": "importing-3d-model",
+      "vimeoVideoId": "dQw4w9WgXcQ",
+      "isFree": false,
+      "order": 3,
+      "durationSeconds": 900
+    },
+    {
+      "id": "motion-tracking-setup",
+      "title": "Basic Motion Tracking Setup",
+      "slug": "motion-tracking-setup",
+      "vimeoVideoId": "dQw4w9WgXcQ",
+      "isFree": false,
+      "order": 4,
+      "durationSeconds": 1080
+    },
+    {
+      "id": "scene-design-fundamentals",
+      "title": "Scene Design Fundamentals",
+      "slug": "scene-design-fundamentals",
+      "vimeoVideoId": "dQw4w9WgXcQ",
+      "isFree": false,
+      "order": 5,
+      "durationSeconds": 840
+    },
+    {
+      "id": "expressions-facial-tracking",
+      "title": "Expressions and Facial Tracking",
+      "slug": "expressions-facial-tracking",
+      "vimeoVideoId": "dQw4w9WgXcQ",
+      "isFree": false,
+      "order": 6,
+      "durationSeconds": 960
+    },
+    {
+      "id": "props-and-accessories",
+      "title": "Props and Accessories",
+      "slug": "props-and-accessories",
+      "vimeoVideoId": "dQw4w9WgXcQ",
+      "isFree": false,
+      "order": 7,
+      "durationSeconds": 660
+    },
+    {
+      "id": "stream-integration-obs",
+      "title": "Stream Integration (OBS Setup)",
+      "slug": "stream-integration-obs",
+      "vimeoVideoId": "dQw4w9WgXcQ",
+      "isFree": false,
+      "order": 8,
+      "durationSeconds": 1200
+    },
+    {
+      "id": "advanced-scene-effects",
+      "title": "Advanced Scene Effects",
+      "slug": "advanced-scene-effects",
+      "vimeoVideoId": "dQw4w9WgXcQ",
+      "isFree": false,
+      "order": 9,
+      "durationSeconds": 780
+    },
+    {
+      "id": "going-live",
+      "title": "Going Live: Your First Stream",
+      "slug": "going-live",
+      "vimeoVideoId": "dQw4w9WgXcQ",
+      "isFree": false,
+      "order": 10,
+      "durationSeconds": 600
+    }
+  ]
+}
