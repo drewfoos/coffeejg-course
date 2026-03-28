@@ -29,7 +29,10 @@
       "Edit(./config/**)",
       "Bash(cd:*)",
       "Skill(update-config)",
-      "Bash(python -m json.tool)"
+      "Bash(python -m json.tool)",
+      "Bash(npx vercel:*)",
+      "Bash(npm install:*)",
+      "Bash(npx shadcn@latest init -d -y)"
     ],
     "ask": []
   }
