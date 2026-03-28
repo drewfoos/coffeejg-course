@@ -1,19 +1,36 @@
 import type { Timestamp } from "firebase-admin/firestore";
 
+// Helper to convert Firestore Timestamps to ISO strings for client serialization
+export function serializeTimestamp(ts: Timestamp | undefined | null): string {
+  if (!ts) return new Date().toISOString();
+  return ts.toDate().toISOString();
+}
+
+export function serializeDoc<T extends Record<string, unknown>>(doc: T): T {
+  const result = { ...doc };
+  for (const key of Object.keys(result)) {
+    const val = result[key];
+    if (val && typeof val === "object" && "_seconds" in val && "_nanoseconds" in val) {
+      (result as Record<string, unknown>)[key] = serializeTimestamp(val as unknown as Timestamp);
+    }
+  }
+  return result;
+}
+
 export interface User {
   displayName: string;
   email: string;
   authProvider: "email" | "google";
   stripeCustomerId: string | null;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Enrollment {
   userId: string;
   courseId: string;
   stripeSessionId: string;
-  enrolledAt: Timestamp;
+  enrolledAt: string;
   status: "active" | "revoked";
   source: "purchase" | "gift" | "promo";
 }
@@ -26,7 +43,7 @@ export interface Purchase {
   stripeCustomerId: string;
   amountPaid: number;
   currency: string;
-  purchasedAt: Timestamp;
+  purchasedAt: string;
 }
 
 export interface Course {
@@ -36,7 +53,7 @@ export interface Course {
   stripePriceId: string;
   isFree: boolean;
   thumbnailUrl: string;
-  publishedAt: Timestamp;
+  publishedAt: string;
 }
 
 export interface Lesson {
@@ -53,7 +70,7 @@ export interface Progress {
   lessonId: string;
   courseId: string;
   completed: boolean;
-  completedAt: Timestamp | null;
+  completedAt: string | null;
 }
 
 export interface Asset {
@@ -64,12 +81,12 @@ export interface Asset {
   tags: string[];
   source: string;
   externalUrl: string;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Favorite {
   userId: string;
   assetId: string;
-  favoritedAt: Timestamp;
+  favoritedAt: string;
 }

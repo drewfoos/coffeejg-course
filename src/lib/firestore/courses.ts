@@ -1,5 +1,6 @@
 import { adminDb } from "@/lib/firebase/admin";
 import type { Course } from "@/lib/types";
+import { serializeDoc } from "@/lib/types";
 
 export type CourseWithId = Course & { id: string };
 
@@ -8,7 +9,7 @@ export async function getCourse(
 ): Promise<CourseWithId | null> {
   const doc = await adminDb.collection("courses").doc(courseId).get();
   if (!doc.exists) return null;
-  return { id: doc.id, ...(doc.data() as Course) };
+  return serializeDoc({ id: doc.id, ...(doc.data() as Course) });
 }
 
 export async function getAllCourses(): Promise<CourseWithId[]> {
@@ -17,8 +18,7 @@ export async function getAllCourses(): Promise<CourseWithId[]> {
     .orderBy("publishedAt", "desc")
     .get();
 
-  return snapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...(doc.data() as Course),
-  }));
+  return snapshot.docs.map((doc) =>
+    serializeDoc({ id: doc.id, ...(doc.data() as Course) })
+  );
 }

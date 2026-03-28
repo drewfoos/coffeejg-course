@@ -1,6 +1,7 @@
 import { adminDb } from "@/lib/firebase/admin";
 import { PAGE_SIZE } from "@/lib/constants";
 import type { Asset } from "@/lib/types";
+import { serializeDoc } from "@/lib/types";
 import { Timestamp } from "firebase-admin/firestore";
 
 export interface AssetWithId extends Asset {
@@ -47,10 +48,9 @@ export async function getAssets(
   const hasNextPage = docs.length > PAGE_SIZE;
   const pageDocs = hasNextPage ? docs.slice(0, PAGE_SIZE) : docs;
 
-  const assets: AssetWithId[] = pageDocs.map((doc) => ({
-    id: doc.id,
-    ...(doc.data() as Asset),
-  }));
+  const assets: AssetWithId[] = pageDocs.map((doc) =>
+    serializeDoc({ id: doc.id, ...(doc.data() as Asset) })
+  );
 
   const nextCursor = hasNextPage
     ? pageDocs[pageDocs.length - 1].data().createdAt.toMillis().toString()
@@ -68,8 +68,7 @@ export async function getAssetsByIds(ids: string[]): Promise<AssetWithId[]> {
 
   return snapshots
     .filter((snap) => snap.exists)
-    .map((snap) => ({
-      id: snap.id,
-      ...(snap.data() as Asset),
-    }));
+    .map((snap) =>
+      serializeDoc({ id: snap.id, ...(snap.data() as Asset) })
+    );
 }

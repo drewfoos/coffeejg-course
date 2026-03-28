@@ -1,5 +1,6 @@
 import { adminDb } from "@/lib/firebase/admin";
 import type { Lesson } from "@/lib/types";
+import { serializeDoc } from "@/lib/types";
 
 export type LessonWithId = Lesson & { id: string };
 
@@ -13,10 +14,9 @@ export async function getLessons(
     .orderBy("order", "asc")
     .get();
 
-  return snapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...(doc.data() as Lesson),
-  }));
+  return snapshot.docs.map((doc) =>
+    serializeDoc({ id: doc.id, ...(doc.data() as Lesson) })
+  );
 }
 
 export async function getLesson(
@@ -31,5 +31,5 @@ export async function getLesson(
     .get();
 
   if (!doc.exists) return null;
-  return { id: doc.id, ...(doc.data() as Lesson) };
+  return serializeDoc({ id: doc.id, ...(doc.data() as Lesson) });
 }
