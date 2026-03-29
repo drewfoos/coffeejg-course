@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getCourse } from "@/lib/firestore/courses";
 import { getLessons } from "@/lib/firestore/lessons";
@@ -22,20 +22,32 @@ export default async function CoursePage({
   params: Promise<{ courseId: string }>;
 }) {
   const { courseId } = await params;
-  const course = await getCourse(courseId);
+
+  const [course, lessons] = await Promise.all([
+    getCourse(courseId),
+    getLessons(courseId),
+  ]);
 
   if (!course) notFound();
 
-  const lessons = await getLessons(courseId);
+  // Redirect straight to the first lesson like NeetCode
+  if (lessons.length > 0) {
+    redirect(`/courses/${courseId}/lessons/${lessons[0].id}`);
+  }
+
   const user = await getCurrentUser();
 
   let enrollment = null;
   let progress = new Map<string, boolean>();
 
   if (user) {
-    enrollment = await getEnrollment(user.uid, courseId);
+    const [enrollmentResult, progressResult] = await Promise.all([
+      getEnrollment(user.uid, courseId),
+      getCourseProgress(user.uid, courseId),
+    ]);
+    enrollment = enrollmentResult;
     if (enrollment?.status === "active") {
-      progress = await getCourseProgress(user.uid, courseId);
+      progress = progressResult;
     }
   }
 
@@ -90,18 +102,12 @@ export default async function CoursePage({
                       )}
                     </span>
                     <div className="flex-1">
-                      {isAccessible ? (
-                        <Link
-                          href={`/courses/${courseId}/lessons/${lesson.id}`}
-                          className="font-medium hover:underline"
-                        >
-                          {lesson.title}
-                        </Link>
-                      ) : (
-                        <span className="font-medium text-muted-foreground">
-                          {lesson.title}
-                        </span>
-                      )}
+                      <Link
+                        href={`/courses/${courseId}/lessons/${lesson.id}`}
+                        className="font-medium hover:underline"
+                      >
+                        {lesson.title}
+                      </Link>
                     </div>
                     <div className="flex items-center gap-2">
                       {lesson.isFree && (
@@ -144,7 +150,7 @@ export default async function CoursePage({
                   <div className="space-y-4">
                     <BuyCourseButton
                       courseId={courseId}
-                      price="$29.99"
+                      price="$2.00"
                     />
                     <p className="text-center text-xs text-muted-foreground">
                       One-time payment. Lifetime access.

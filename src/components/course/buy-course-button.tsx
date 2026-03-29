@@ -7,9 +7,18 @@ import { Button } from "@/components/ui/button";
 interface BuyCourseButtonProps {
   courseId: string;
   price: string;
+  priceId?: string;
+  label?: string;
+  variant?: "default" | "outline";
 }
 
-export function BuyCourseButton({ courseId, price }: BuyCourseButtonProps) {
+export function BuyCourseButton({
+  courseId,
+  price,
+  priceId,
+  label,
+  variant = "default",
+}: BuyCourseButtonProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -17,7 +26,7 @@ export function BuyCourseButton({ courseId, price }: BuyCourseButtonProps) {
     setError("");
     setLoading(true);
     try {
-      const url = await createCheckoutSession(courseId);
+      const url = await createCheckoutSession(courseId, priceId);
       window.location.href = url;
     } catch (err) {
       setError(
@@ -33,9 +42,12 @@ export function BuyCourseButton({ courseId, price }: BuyCourseButtonProps) {
         onClick={handleBuy}
         disabled={loading}
         size="lg"
+        variant={variant}
         className="w-full"
       >
-        {loading ? "Redirecting to checkout..." : `Buy Course — ${price}`}
+        {loading
+          ? "Redirecting to checkout..."
+          : label || `Buy Course — ${price}`}
       </Button>
       {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
     </div>

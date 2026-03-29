@@ -37,6 +37,7 @@ interface AssetData {
   tags: string[];
   source: string;
   externalUrl: string;
+  free: boolean;
 }
 
 async function seedAssets() {

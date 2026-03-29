@@ -1,26 +1,23 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-
+import { cn } from "@/lib/utils";
+import { SourceIcon } from "./source-icon";
 
 const TAGS = [
-  "VTuber Model",
-  "Texture",
-  "Tool",
-  "Reference",
-  "Animation",
-  "Accessory",
-  "Background",
-  "Audio",
-  "3D",
   "2D",
-  "VRM",
-  "Live2D",
+  "Emotes/Stickers/Badges",
+  "Clothing/Accessories",
+  "Props",
+  "Panels & Banners",
+  "Backgrounds",
+  "Assets",
+  "Holiday",
+  "Easter",
+  "Twitch",
 ];
 
-const SOURCES = ["Booth", "Gumroad", "Free", "itch.io", "GitHub", "Other"];
+const SOURCES = ["Ko-fi", "Booth", "Gumroad", "Free", "itch.io", "GitHub", "Other"];
 
 export function FilterBar() {
   const router = useRouter();
@@ -35,66 +32,90 @@ export function FilterBar() {
     } else {
       params.delete(key);
     }
-    // Reset pagination when filters change
     params.delete("cursor");
     router.push(`/resources?${params.toString()}`);
   };
 
   return (
     <div className="space-y-4">
+      {/* Tags */}
       <div>
-        <p className="mb-2 text-sm font-medium text-muted-foreground">Tags</p>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Category
+        </p>
         <div className="flex flex-wrap gap-2">
-          <Badge
-            variant={activeTag === "" ? "default" : "outline"}
-            className="cursor-pointer"
+          <FilterPill
+            label="All"
+            active={activeTag === ""}
             onClick={() => updateFilters("tag", "")}
-          >
-            All
-          </Badge>
+          />
           {TAGS.map((tag) => (
-            <Badge
+            <FilterPill
               key={tag}
-              variant={activeTag === tag ? "default" : "outline"}
-              className="cursor-pointer"
+              label={tag}
+              active={activeTag === tag}
               onClick={() =>
                 updateFilters("tag", activeTag === tag ? "" : tag)
               }
-            >
-              {tag}
-            </Badge>
+            />
           ))}
         </div>
       </div>
+
+      {/* Sources */}
       <div>
-        <p className="mb-2 text-sm font-medium text-muted-foreground">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Source
         </p>
         <div className="flex flex-wrap gap-2">
-          <Button
-            variant={activeSource === "" ? "default" : "outline"}
-            size="sm"
+          <FilterPill
+            label="All"
+            active={activeSource === ""}
             onClick={() => updateFilters("source", "")}
-          >
-            All
-          </Button>
+          />
           {SOURCES.map((source) => (
-            <Button
+            <FilterPill
               key={source}
-              variant={activeSource === source ? "default" : "outline"}
-              size="sm"
+              label={source}
+              icon={<SourceIcon source={source} className="h-3.5 w-3.5" />}
+              active={activeSource === source}
               onClick={() =>
                 updateFilters(
                   "source",
                   activeSource === source ? "" : source
                 )
               }
-            >
-              {source}
-            </Button>
+            />
           ))}
         </div>
       </div>
     </div>
+  );
+}
+
+function FilterPill({
+  label,
+  icon,
+  active,
+  onClick,
+}: {
+  label: string;
+  icon?: React.ReactNode;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors",
+        active
+          ? "bg-primary text-primary-foreground"
+          : "bg-card text-muted-foreground hover:bg-accent hover:text-foreground border border-border/50"
+      )}
+    >
+      {icon}
+      {label}
+    </button>
   );
 }

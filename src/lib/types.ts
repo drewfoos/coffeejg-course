@@ -63,6 +63,9 @@ export interface Lesson {
   isFree: boolean;
   order: number;
   durationSeconds: number;
+  section?: string;
+  description?: string;
+  topics?: string[];
 }
 
 export interface Progress {
@@ -81,6 +84,7 @@ export interface Asset {
   tags: string[];
   source: string;
   externalUrl: string;
+  free: boolean;
   createdAt: string;
   updatedAt: string;
 }

@@ -36,6 +36,9 @@ interface LessonData {
   isFree: boolean;
   order: number;
   durationSeconds: number;
+  section?: string;
+  description?: string;
+  topics?: string[];
 }
 
 interface CourseData {
