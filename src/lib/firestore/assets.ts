@@ -38,7 +38,11 @@ export async function getAssets(
   query = query.orderBy("createdAt", "desc");
 
   if (cursor) {
-    const cursorTimestamp = Timestamp.fromMillis(Number(cursor));
+    const cursorMs = Number(cursor);
+    if (!Number.isFinite(cursorMs) || cursorMs < 0) {
+      return { assets: [], nextCursor: null };
+    }
+    const cursorTimestamp = Timestamp.fromMillis(cursorMs);
     query = query.startAfter(cursorTimestamp);
   }
 
@@ -75,13 +79,21 @@ export async function getAssets(
 export async function getAssetsByIds(ids: string[]): Promise<AssetWithId[]> {
   if (ids.length === 0) return [];
 
-  // Firestore getAll supports up to 500 docs at a time
-  const refs = ids.map((id) => adminDb.collection("assets").doc(id));
-  const snapshots = await adminDb.getAll(...refs);
+  // Firestore getAll supports up to 500 docs at a time — batch if needed
+  const BATCH_SIZE = 500;
+  const results: AssetWithId[] = [];
 
-  return snapshots
-    .filter((snap) => snap.exists)
-    .map((snap) =>
-      serializeDoc({ id: snap.id, ...(snap.data() as Asset) })
-    );
+  for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+    const batch = ids.slice(i, i + BATCH_SIZE);
+    const refs = batch.map((id) => adminDb.collection("assets").doc(id));
+    const snapshots = await adminDb.getAll(...refs);
+
+    for (const snap of snapshots) {
+      if (snap.exists) {
+        results.push(serializeDoc({ id: snap.id, ...(snap.data() as Asset) }));
+      }
+    }
+  }
+
+  return results;
 }

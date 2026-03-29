@@ -37,57 +37,47 @@ export function FilterBar() {
   };
 
   return (
-    <div className="space-y-4">
-      {/* Tags */}
-      <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Category
-        </p>
-        <div className="flex flex-wrap gap-2">
+    <div className="flex flex-col items-center gap-3">
+      {/* Categories — wide row */}
+      <div className="flex flex-wrap justify-center gap-2">
+        <FilterPill
+          label="All Categories"
+          active={activeTag === ""}
+          onClick={() => updateFilters("tag", "")}
+        />
+        {TAGS.map((tag) => (
           <FilterPill
-            label="All"
-            active={activeTag === ""}
-            onClick={() => updateFilters("tag", "")}
+            key={tag}
+            label={tag}
+            active={activeTag === tag}
+            onClick={() =>
+              updateFilters("tag", activeTag === tag ? "" : tag)
+            }
           />
-          {TAGS.map((tag) => (
-            <FilterPill
-              key={tag}
-              label={tag}
-              active={activeTag === tag}
-              onClick={() =>
-                updateFilters("tag", activeTag === tag ? "" : tag)
-              }
-            />
-          ))}
-        </div>
+        ))}
       </div>
 
-      {/* Sources */}
-      <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Source
-        </p>
-        <div className="flex flex-wrap gap-2">
+      {/* Sources — narrower row beneath */}
+      <div className="flex flex-wrap justify-center gap-2">
+        <FilterPill
+          label="All Sources"
+          active={activeSource === ""}
+          onClick={() => updateFilters("source", "")}
+        />
+        {SOURCES.map((source) => (
           <FilterPill
-            label="All"
-            active={activeSource === ""}
-            onClick={() => updateFilters("source", "")}
+            key={source}
+            label={source}
+            icon={<SourceIcon source={source} className="h-3.5 w-3.5" />}
+            active={activeSource === source}
+            onClick={() =>
+              updateFilters(
+                "source",
+                activeSource === source ? "" : source
+              )
+            }
           />
-          {SOURCES.map((source) => (
-            <FilterPill
-              key={source}
-              label={source}
-              icon={<SourceIcon source={source} className="h-3.5 w-3.5" />}
-              active={activeSource === source}
-              onClick={() =>
-                updateFilters(
-                  "source",
-                  activeSource === source ? "" : source
-                )
-              }
-            />
-          ))}
-        </div>
+        ))}
       </div>
     </div>
   );
@@ -110,8 +100,8 @@ function FilterPill({
       className={cn(
         "flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors",
         active
-          ? "bg-primary text-primary-foreground"
-          : "bg-card text-muted-foreground hover:bg-accent hover:text-foreground border border-border/50"
+          ? "bg-primary text-primary-foreground shadow-sm"
+          : "bg-card/60 text-muted-foreground backdrop-blur-sm hover:bg-card hover:text-foreground border border-border/40"
       )}
     >
       {icon}

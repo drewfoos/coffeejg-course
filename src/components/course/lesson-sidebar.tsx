@@ -3,10 +3,17 @@
 import { useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import type { LessonWithId } from "@/lib/firestore/lessons";
+export interface SidebarLesson {
+  id: string;
+  title: string;
+  order: number;
+  durationSeconds: number;
+  isFree: boolean;
+  section?: string;
+}
 
 interface LessonSidebarProps {
-  lessons: LessonWithId[];
+  lessons: SidebarLesson[];
   courseId: string;
   currentLessonId: string;
   progress: Record<string, boolean>;
@@ -20,10 +27,10 @@ function formatDuration(seconds: number): string {
 
 interface Section {
   name: string;
-  lessons: LessonWithId[];
+  lessons: SidebarLesson[];
 }
 
-function groupBySection(lessons: LessonWithId[]): Section[] {
+function groupBySection(lessons: SidebarLesson[]): Section[] {
   const sections: Section[] = [];
   let current: Section | null = null;
 
@@ -118,7 +125,7 @@ export function LessonSidebar({
                       <span className="flex h-5 w-5 shrink-0 items-center justify-center">
                         {isCompleted ? (
                           <svg
-                            className="h-[18px] w-[18px] text-green-500"
+                            className="h-[18px] w-[18px] text-primary"
                             viewBox="0 0 24 24"
                             fill="none"
                             strokeWidth={2.5}
@@ -149,7 +156,7 @@ export function LessonSidebar({
                             className={cn(
                               "flex h-[18px] w-[18px] items-center justify-center rounded-full text-[10px]",
                               isCurrent
-                                ? "bg-primary text-white font-bold"
+                                ? "bg-primary text-primary-foreground font-bold"
                                 : "bg-muted text-muted-foreground"
                             )}
                           >
@@ -175,7 +182,7 @@ export function LessonSidebar({
                       {/* Right side: duration + free badge */}
                       <div className="flex shrink-0 items-center gap-2">
                         {lesson.isFree && (
-                          <span className="rounded bg-green-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-green-500">
+                          <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
                             FREE
                           </span>
                         )}

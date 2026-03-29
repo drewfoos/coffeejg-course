@@ -46,12 +46,7 @@ export default function SignupPage() {
       await updateProfile(credential.user, { displayName: name });
       const idToken = await credential.user.getIdToken();
       await setSessionCookie(idToken);
-      await createUserDocIfNotExists(
-        credential.user.uid,
-        email,
-        name,
-        "email"
-      );
+      await createUserDocIfNotExists(idToken, "email");
       router.push("/");
     } catch (err) {
       const message =

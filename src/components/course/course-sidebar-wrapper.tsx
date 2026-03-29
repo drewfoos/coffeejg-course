@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { LessonSidebar } from "./lesson-sidebar";
-import type { LessonWithId } from "@/lib/firestore/lessons";
+import type { SidebarLesson } from "./lesson-sidebar";
 
 interface CourseSidebarWrapperProps {
   courseTitle: string;
   completedCount: number;
   totalCount: number;
   isEnrolled: boolean;
-  lessons: LessonWithId[];
+  lessons: SidebarLesson[];
   courseId: string;
   currentLessonId: string;
   progressMap: Record<string, boolean>;
@@ -47,7 +47,7 @@ export function CourseSidebarWrapper({
             {isEnrolled && totalCount > 0 && (
               <div className="mt-3 h-1 overflow-hidden rounded-full bg-border/50">
                 <div
-                  className="h-full rounded-full bg-green-500 transition-all"
+                  className="h-full rounded-full bg-primary transition-all"
                   style={{
                     width: `${(completedCount / totalCount) * 100}%`,
                   }}

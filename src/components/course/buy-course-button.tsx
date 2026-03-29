@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 interface BuyCourseButtonProps {
   courseId: string;
   price: string;
-  priceId?: string;
   label?: string;
   variant?: "default" | "outline";
 }
@@ -15,7 +14,6 @@ interface BuyCourseButtonProps {
 export function BuyCourseButton({
   courseId,
   price,
-  priceId,
   label,
   variant = "default",
 }: BuyCourseButtonProps) {
@@ -26,7 +24,7 @@ export function BuyCourseButton({
     setError("");
     setLoading(true);
     try {
-      const url = await createCheckoutSession(courseId, priceId);
+      const url = await createCheckoutSession(courseId);
       window.location.href = url;
     } catch (err) {
       setError(

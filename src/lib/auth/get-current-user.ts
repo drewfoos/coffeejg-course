@@ -12,7 +12,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     const token = await getSessionToken();
     if (!token) return null;
 
-    const decoded = await adminAuth.verifyIdToken(token);
+    const decoded = await adminAuth.verifySessionCookie(token, true);
     return {
       uid: decoded.uid,
       email: decoded.email ?? "",
