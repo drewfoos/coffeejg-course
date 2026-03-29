@@ -41,18 +41,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  // Refresh the session cookie when the token refreshes (every ~55 min)
-  useEffect(() => {
-    if (!user) return;
-
-    const interval = setInterval(async () => {
-      const idToken = await user.getIdToken(true);
-      await setSessionCookie(idToken);
-    }, 50 * 60 * 1000); // 50 minutes
-
-    return () => clearInterval(interval);
-  }, [user]);
-
   const signOut = async () => {
     await firebaseSignOut(auth);
     await clearSessionCookie();

@@ -16,6 +16,7 @@ export default async function FavoritesPage() {
     .collection("favorites")
     .where("userId", "==", user.uid)
     .orderBy("favoritedAt", "desc")
+    .limit(100)
     .get();
 
   const favorites = favoritesSnapshot.docs.map(

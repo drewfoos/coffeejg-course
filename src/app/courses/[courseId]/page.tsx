@@ -30,10 +30,11 @@ export default async function CoursePage({
 
   if (!course) notFound();
 
-  // Redirect straight to the first lesson like NeetCode
+  // Redirect straight to the first lesson like NeetCode — no content rendered
   if (lessons.length > 0) {
     redirect(`/courses/${courseId}/lessons/${lessons[0].id}`);
   }
+  // Below only renders when course has zero lessons (edge case)
 
   const user = await getCurrentUser();
 
@@ -94,7 +95,7 @@ export default async function CoursePage({
                   <CardContent className="flex items-center gap-4 p-4">
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-sm">
                       {isCompleted ? (
-                        <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
+                        <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                         </svg>
                       ) : (
@@ -136,7 +137,7 @@ export default async function CoursePage({
               <CardContent className="p-6">
                 {isEnrolled ? (
                   <div className="space-y-4">
-                    <p className="text-lg font-semibold text-green-600">
+                    <p className="text-lg font-semibold text-primary">
                       Enrolled
                     </p>
                     <Separator />

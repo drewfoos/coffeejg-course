@@ -19,12 +19,7 @@ export function GoogleSignInButton() {
       const credential = await signInWithPopup(auth, provider);
       const idToken = await credential.user.getIdToken();
       await setSessionCookie(idToken);
-      await createUserDocIfNotExists(
-        credential.user.uid,
-        credential.user.email ?? "",
-        credential.user.displayName ?? "",
-        "google"
-      );
+      await createUserDocIfNotExists(idToken, "google");
       router.push("/");
     } catch {
       // User cancelled or error - silently handle

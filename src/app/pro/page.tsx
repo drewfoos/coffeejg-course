@@ -12,7 +12,6 @@ const PLANS = [
   {
     name: "Annual Access",
     price: "$2.00",
-    priceId: process.env.STRIPE_PRICE_ANNUAL || "",
     period: "/ year",
     description: "Full access for one year",
     features: [
@@ -26,7 +25,6 @@ const PLANS = [
   {
     name: "Lifetime Access",
     price: "$5.00",
-    priceId: process.env.STRIPE_PRICE_LIFETIME || "",
     period: "one-time",
     description: "Pay once, learn forever",
     features: [
@@ -65,8 +63,8 @@ export default async function ProPage() {
         <div className="mx-auto max-w-md text-center">
           <Card>
             <CardContent className="p-8 space-y-4">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-                <svg className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                <svg className="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                 </svg>
               </div>
@@ -115,7 +113,6 @@ export default async function ProPage() {
                 <BuyCourseButton
                   courseId={COURSE_ID}
                   price={plan.price}
-                  priceId={plan.priceId}
                   label={`Get ${plan.name}`}
                   variant={plan.popular ? "default" : "outline"}
                 />
@@ -126,7 +123,7 @@ export default async function ProPage() {
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-start gap-3 text-sm">
                       <svg
-                        className="h-5 w-5 shrink-0 text-green-500 mt-0.5"
+                        className="h-5 w-5 shrink-0 text-primary mt-0.5"
                         fill="none"
                         viewBox="0 0 24 24"
                         strokeWidth={2}

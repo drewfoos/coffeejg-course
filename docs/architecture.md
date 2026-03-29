@@ -29,9 +29,9 @@ Next.js on Vercel
 
 1. User signs in via Firebase Auth (email/password or Google).
 2. Firebase issues an ID token (JWT).
-3. Token is stored in a session cookie.
-4. Server Components/Actions verify the token via Firebase Admin SDK on every authenticated request.
-5. On first sign-in, a `users/{uid}` Firestore doc is created if it doesn't exist.
+3. Server Action calls `adminAuth.createSessionCookie(idToken)` to mint a server-controlled session cookie (`__session`, HttpOnly, 5-day expiry).
+4. Server Components/Actions verify the session cookie via `adminAuth.verifySessionCookie(cookie, true)` (with revocation check) on every authenticated request.
+5. On first sign-in, a Server Action verifies the ID token via `adminAuth.verifyIdToken()` and creates a `users/{uid}` Firestore doc if it doesn't exist.
 
 Firebase UID is the canonical user identity across all collections.
 
@@ -56,12 +56,12 @@ The webhook is the only path that creates enrollments. The success page never wr
 
 Server Component runs this check on every lesson page load:
 
-1. Read lesson doc. If `isFree` → render video.
-2. If not free, verify user's Firebase token.
-3. Read `enrollments/{uid}::{courseId}`. If exists and `status === "active"` → render Vimeo embed.
-4. Otherwise → redirect to course purchase page.
+1. Read lesson doc. If `isFree` → allow access.
+2. If not free, verify user's session cookie.
+3. Read `enrollments/{uid}::{courseId}`. If exists and `status === "active"` → allow access.
+4. Otherwise → show locked state with purchase CTA.
 
-Vimeo video IDs are never sent to the client unless access is confirmed server-side.
+Video embed URLs are resolved server-side via `/api/video` route, which re-verifies auth and enrollment before returning the embed URL. Vimeo video IDs never appear in RSC payloads or client-side code. Lesson article content (description, topics) is also gated — only sidebar metadata (title, order, duration, section) is sent to client components.
 
 ## Resource Hub Flow
 
@@ -74,5 +74,6 @@ Vimeo video IDs are never sent to the client unless access is confirmed server-s
 - **One source of truth per fact.** Enrollment doc = access. No denormalized arrays.
 - **Composite IDs enforce uniqueness.** `{uid}::{courseId}` means one enrollment per user per course, structurally.
 - **All mutations are idempotent.** Firestore transactions check before writing. Retries and duplicate webhooks are safe.
-- **Server writes for sensitive data.** Enrollments, purchases, and user docs are written only by server code (Admin SDK). Firestore rules block client writes to these collections.
-- **Client writes for user-scoped data.** Progress and favorites are written by the client, scoped to the user's own documents via security rules.
+- **Server writes for all data.** All Firestore writes go through the Admin SDK (Server Actions / Route Handlers). Firestore security rules deny all client-side reads and writes.
+- **Input validation at boundaries.** All user-supplied IDs are validated against `^[a-zA-Z0-9_-]{1,128}$` before use in Firestore queries.
+- **Webhook deduplication.** Processed Stripe event IDs are stored in `processedEvents` collection to prevent replay.

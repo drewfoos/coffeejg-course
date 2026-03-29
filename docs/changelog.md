@@ -1,5 +1,35 @@
 # Changelog
 
+## v0.3.0 — Security Hardening, Theming & UX Polish
+
+### Security
+- Replaced raw ID token cookie with Firebase `createSessionCookie()` (server-controlled 5-day expiry, revocation check)
+- Video embed URLs resolved server-side via `/api/video` route — Vimeo IDs never leak to client
+- Lesson sidebar receives stripped `SidebarLesson` type (excludes vimeoVideoId, description, topics)
+- Lesson article content gated behind access check (locked state shows upgrade CTA)
+- Server-side price resolution in checkout — removed client-supplied `priceId` parameter
+- `createUserDocIfNotExists` now verifies ID token server-side instead of trusting client UID
+- Input validation (`validateId`) on all Server Actions and API routes
+- Stripe webhook event deduplication via `processedEvents` collection
+- Webhook error messages genericized (no config leak)
+- Checkout success page validates `client_reference_id` matches current user
+- Favorites query capped at 100 results
+- CORS headers on `/api/video` restricted to app origin
+- Firestore security rules deny all client-side access
+- Removed 50-minute token refresh interval (unnecessary with session cookies)
+
+### Theming & Design
+- Purple-dominant color palette matching CoffeeJG character (oklch color space, hue 280/285)
+- VTuber-style typography: Fredoka (headings) + Quicksand (body accents) via next/font
+- Replaced placeholder navbar logo with actual SVG logo
+- Floating emoji particles on Resource Hub hero (canvas-based, mouse-interactive)
+- Color consistency across all pages: replaced hardcoded greens/blacks with theme tokens
+
+### Performance
+- `getAssetsByIds` batches Firestore reads in chunks of 500
+- Hero particles canvas pauses via IntersectionObserver when off-screen
+- Cursor pagination validates input before `Timestamp.fromMillis`
+
 ## v0.2.0 — MVP Complete
 
 ### Auth + Payments (Milestone 1)

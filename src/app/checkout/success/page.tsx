@@ -20,8 +20,17 @@ export default async function CheckoutSuccessPage({
     redirect("/login");
   }
 
-  const session = await stripe.checkout.sessions.retrieve(session_id);
-  const courseId = session.metadata?.courseId;
+  let courseId: string;
+  try {
+    const session = await stripe.checkout.sessions.retrieve(session_id);
+    // Verify this session belongs to the logged-in user
+    if (session.client_reference_id !== user.uid) {
+      redirect("/");
+    }
+    courseId = session.metadata?.courseId ?? "";
+  } catch {
+    redirect("/");
+  }
 
   if (!courseId) {
     redirect("/");
@@ -33,9 +42,9 @@ export default async function CheckoutSuccessPage({
     <main className="mx-auto max-w-2xl px-4 py-16 text-center">
       {enrollment ? (
         <div className="space-y-6">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
             <svg
-              className="h-8 w-8 text-green-600"
+              className="h-8 w-8 text-primary"
               fill="none"
               viewBox="0 0 24 24"
               strokeWidth={2}

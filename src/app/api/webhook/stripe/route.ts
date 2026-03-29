@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
+import { adminDb } from "@/lib/firebase/admin";
 import { createEnrollmentWithPurchase } from "@/lib/firestore/enrollments";
 import type Stripe from "stripe";
 
@@ -20,7 +21,7 @@ export async function POST(request: Request) {
   if (!webhookSecret) {
     console.error("STRIPE_WEBHOOK_SECRET is not configured.");
     return NextResponse.json(
-      { error: "Webhook secret not configured." },
+      { error: "Server error." },
       { status: 500 }
     );
   }
@@ -31,6 +32,13 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Webhook signature verification failed:", error);
     return NextResponse.json({ error: "Invalid signature." }, { status: 400 });
+  }
+
+  // Deduplicate webhook events to prevent replay attacks
+  const eventRef = adminDb.collection("processedEvents").doc(event.id);
+  const eventDoc = await eventRef.get();
+  if (eventDoc.exists) {
+    return NextResponse.json({ received: true }, { status: 200 });
   }
 
   if (event.type === "checkout.session.completed") {
@@ -67,6 +75,9 @@ export async function POST(request: Request) {
       }
     }
   }
+
+  // Mark event as processed
+  await eventRef.set({ processedAt: new Date().toISOString() });
 
   return NextResponse.json({ received: true }, { status: 200 });
 }
