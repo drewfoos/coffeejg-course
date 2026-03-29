@@ -3,7 +3,7 @@
   "title": "3D VTubing with Warudo: Complete Guide",
   "slug": "3d-vtubing-with-warudo",
   "description": "Learn everything you need to start 3D VTubing with Warudo. From setting up your first model to advanced scene design, this course covers the complete workflow for becoming a professional 3D VTuber.",
-  "stripePriceId": "price_placeholder",
+  "stripePriceId": "price_1TFs7XKE33mVTjgBfxYyEM9J",
   "isFree": false,
   "thumbnailUrl": "https://placehold.co/800x450/1a1a2e/e94560?text=3D+VTubing+with+Warudo",
   "lessons": [
@@ -14,7 +14,10 @@
       "vimeoVideoId": "dQw4w9WgXcQ",
       "isFree": true,
       "order": 1,
-      "durationSeconds": 480
+      "durationSeconds": 480,
+      "section": "Getting Started",
+      "description": "An overview of the VTubing landscape — what it is, how it works, and what you'll learn in this course. We'll look at examples of successful VTubers and break down the tech stack you need.",
+      "topics": ["What is VTubing?", "2D vs 3D VTubing", "Required hardware", "Software overview", "Course roadmap"]
     },
     {
       "id": "setting-up-warudo",
@@ -23,7 +26,10 @@
       "vimeoVideoId": "dQw4w9WgXcQ",
       "isFree": true,
       "order": 2,
-      "durationSeconds": 720
+      "durationSeconds": 720,
+      "section": "Getting Started",
+      "description": "Download, install, and configure Warudo for the first time. We'll walk through the interface, key settings, and get your workspace ready for your first model.",
+      "topics": ["Downloading Warudo", "System requirements", "Interface walkthrough", "Initial configuration", "Workspace setup"]
     },
     {
       "id": "importing-3d-model",
@@ -32,7 +38,10 @@
       "vimeoVideoId": "dQw4w9WgXcQ",
       "isFree": false,
       "order": 3,
-      "durationSeconds": 900
+      "durationSeconds": 900,
+      "section": "Getting Started",
+      "description": "Learn how to import VRM and other 3D model formats into Warudo. We'll cover model requirements, troubleshooting common import issues, and basic model adjustments.",
+      "topics": ["Supported model formats", "VRM file structure", "Import process", "Troubleshooting imports", "Basic model positioning"]
     },
     {
       "id": "motion-tracking-setup",
@@ -41,16 +50,10 @@
       "vimeoVideoId": "dQw4w9WgXcQ",
       "isFree": false,
       "order": 4,
-      "durationSeconds": 1080
-    },
-    {
-      "id": "scene-design-fundamentals",
-      "title": "Scene Design Fundamentals",
-      "slug": "scene-design-fundamentals",
-      "vimeoVideoId": "dQw4w9WgXcQ",
-      "isFree": false,
-      "order": 5,
-      "durationSeconds": 840
+      "durationSeconds": 1080,
+      "section": "Motion & Tracking",
+      "description": "Set up face and body tracking using your webcam or iPhone. Learn calibration techniques and how to fine-tune tracking sensitivity for natural-looking movement.",
+      "topics": ["Webcam vs iPhone tracking", "Face tracking setup", "Body tracking basics", "Calibration", "Tracking sensitivity"]
     },
     {
       "id": "expressions-facial-tracking",
@@ -58,8 +61,23 @@
       "slug": "expressions-facial-tracking",
       "vimeoVideoId": "dQw4w9WgXcQ",
       "isFree": false,
+      "order": 5,
+      "durationSeconds": 960,
+      "section": "Motion & Tracking",
+      "description": "Create custom expressions and fine-tune facial tracking. Set up hotkeys for quick expression changes during streams and configure blend shapes.",
+      "topics": ["Expression editor", "Blend shapes", "Hotkey configuration", "Custom expressions", "Lip sync tuning"]
+    },
+    {
+      "id": "scene-design-fundamentals",
+      "title": "Scene Design Fundamentals",
+      "slug": "scene-design-fundamentals",
+      "vimeoVideoId": "dQw4w9WgXcQ",
+      "isFree": false,
       "order": 6,
-      "durationSeconds": 960
+      "durationSeconds": 840,
+      "section": "Scene & Visuals",
+      "description": "Design your first stream scene in Warudo. Learn about cameras, lighting, backgrounds, and how to create a visually appealing setup.",
+      "topics": ["Camera placement", "Lighting basics", "Background setup", "Scene composition", "Camera presets"]
     },
     {
       "id": "props-and-accessories",
@@ -68,16 +86,10 @@
       "vimeoVideoId": "dQw4w9WgXcQ",
       "isFree": false,
       "order": 7,
-      "durationSeconds": 660
-    },
-    {
-      "id": "stream-integration-obs",
-      "title": "Stream Integration (OBS Setup)",
-      "slug": "stream-integration-obs",
-      "vimeoVideoId": "dQw4w9WgXcQ",
-      "isFree": false,
-      "order": 8,
-      "durationSeconds": 1200
+      "durationSeconds": 660,
+      "section": "Scene & Visuals",
+      "description": "Add props, accessories, and interactive elements to your VTuber setup. Learn how to attach items to your model and trigger prop animations.",
+      "topics": ["Adding props", "Attaching to model", "Prop animations", "Interactive items", "Asset sources"]
     },
     {
       "id": "advanced-scene-effects",
@@ -85,8 +97,23 @@
       "slug": "advanced-scene-effects",
       "vimeoVideoId": "dQw4w9WgXcQ",
       "isFree": false,
+      "order": 8,
+      "durationSeconds": 780,
+      "section": "Scene & Visuals",
+      "description": "Take your scenes to the next level with post-processing effects, screen overlays, particle systems, and dynamic backgrounds.",
+      "topics": ["Post-processing", "Screen overlays", "Particle effects", "Dynamic backgrounds", "Scene transitions"]
+    },
+    {
+      "id": "stream-integration-obs",
+      "title": "Stream Integration (OBS Setup)",
+      "slug": "stream-integration-obs",
+      "vimeoVideoId": "dQw4w9WgXcQ",
+      "isFree": false,
       "order": 9,
-      "durationSeconds": 780
+      "durationSeconds": 1200,
+      "section": "Going Live",
+      "description": "Connect Warudo to OBS Studio for streaming. Learn about capture methods, scene setup in OBS, audio configuration, and stream optimization.",
+      "topics": ["OBS installation", "Capture methods", "Scene setup in OBS", "Audio configuration", "Stream optimization", "Bitrate settings"]
     },
     {
       "id": "going-live",
@@ -95,7 +122,10 @@
       "vimeoVideoId": "dQw4w9WgXcQ",
       "isFree": false,
       "order": 10,
-      "durationSeconds": 600
+      "durationSeconds": 600,
+      "section": "Going Live",
+      "description": "Everything you need for your first stream — pre-stream checklist, going live workflow, engaging with chat, and handling common issues during a broadcast.",
+      "topics": ["Pre-stream checklist", "Going live workflow", "Chat engagement tips", "Troubleshooting live issues", "Post-stream review"]
     }
   ]
 }

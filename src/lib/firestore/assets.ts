@@ -12,6 +12,7 @@ interface GetAssetsOptions {
   tag?: string;
   source?: string;
   cursor?: string;
+  q?: string;
 }
 
 interface GetAssetsResult {
@@ -22,7 +23,7 @@ interface GetAssetsResult {
 export async function getAssets(
   options: GetAssetsOptions
 ): Promise<GetAssetsResult> {
-  const { tag, source, cursor } = options;
+  const { tag, source, cursor, q } = options;
 
   let query: FirebaseFirestore.Query = adminDb.collection("assets");
 
@@ -48,9 +49,21 @@ export async function getAssets(
   const hasNextPage = docs.length > PAGE_SIZE;
   const pageDocs = hasNextPage ? docs.slice(0, PAGE_SIZE) : docs;
 
-  const assets: AssetWithId[] = pageDocs.map((doc) =>
+  let assets: AssetWithId[] = pageDocs.map((doc) =>
     serializeDoc({ id: doc.id, ...(doc.data() as Asset) })
   );
+
+  // Client-side search filter (MVP — use Algolia/Typesense for production)
+  if (q) {
+    const lower = q.toLowerCase();
+    assets = assets.filter(
+      (a) =>
+        a.title.toLowerCase().includes(lower) ||
+        a.artistName.toLowerCase().includes(lower) ||
+        a.description.toLowerCase().includes(lower) ||
+        a.tags.some((t) => t.toLowerCase().includes(lower))
+    );
+  }
 
   const nextCursor = hasNextPage
     ? pageDocs[pageDocs.length - 1].data().createdAt.toMillis().toString()
