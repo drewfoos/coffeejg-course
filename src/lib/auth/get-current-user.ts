@@ -5,6 +5,7 @@ export interface AuthUser {
   uid: string;
   email: string;
   name: string | null;
+  photoURL: string | null;
 }
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
@@ -17,6 +18,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       uid: decoded.uid,
       email: decoded.email ?? "",
       name: decoded.name ?? null,
+      photoURL: decoded.picture ?? null,
     };
   } catch {
     return null;

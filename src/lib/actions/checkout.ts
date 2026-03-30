@@ -7,7 +7,8 @@ import { stripe } from "@/lib/stripe";
 import { validateId } from "@/lib/validation";
 
 export async function createCheckoutSession(
-  courseId: string
+  courseId: string,
+  planType: "lifetime" | "subscription" = "lifetime"
 ): Promise<string> {
   validateId(courseId, "course ID");
   const user = await getCurrentUser();
@@ -26,17 +27,26 @@ export async function createCheckoutSession(
   if (!courseDoc.exists) {
     throw new Error("Course not found.");
   }
-  const courseData = courseDoc.data() as { stripePriceId: string };
-  if (!courseData.stripePriceId) {
-    throw new Error("This course is not available for purchase.");
+  const courseData = courseDoc.data() as {
+    stripePriceId: string;
+    stripeSubPriceId?: string;
+  };
+
+  const isSubscription = planType === "subscription";
+  const priceId = isSubscription
+    ? courseData.stripeSubPriceId
+    : courseData.stripePriceId;
+
+  if (!priceId) {
+    throw new Error("This plan is not available for purchase.");
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
   const session = await stripe.checkout.sessions.create({
-    mode: "payment",
-    line_items: [{ price: courseData.stripePriceId, quantity: 1 }],
-    metadata: { firebaseUid: user.uid, courseId },
+    mode: isSubscription ? "subscription" : "payment",
+    line_items: [{ price: priceId, quantity: 1 }],
+    metadata: { firebaseUid: user.uid, courseId, planType },
     client_reference_id: user.uid,
     success_url: `${appUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${appUrl}/courses/${courseId}`,

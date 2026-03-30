@@ -21,7 +21,8 @@ export async function createEnrollmentWithPurchase(
   stripePaymentIntentId: string,
   stripeCustomerId: string,
   amountPaid: number,
-  currency: string
+  currency: string,
+  planType: "lifetime" | "subscription" = "lifetime"
 ): Promise<boolean> {
   const enrollmentId = makeEnrollmentId(uid, courseId);
   const enrollmentRef = adminDb.collection("enrollments").doc(enrollmentId);
@@ -40,6 +41,7 @@ export async function createEnrollmentWithPurchase(
       enrolledAt: FieldValue.serverTimestamp(),
       status: "active",
       source: "purchase",
+      planType,
     });
 
     tx.set(purchaseRef, {
@@ -52,6 +54,10 @@ export async function createEnrollmentWithPurchase(
       currency,
       purchasedAt: FieldValue.serverTimestamp(),
     });
+
+    // Save stripeCustomerId to the user doc for billing portal access
+    const userRef = adminDb.collection("users").doc(uid);
+    tx.update(userRef, { stripeCustomerId });
 
     return true;
   });

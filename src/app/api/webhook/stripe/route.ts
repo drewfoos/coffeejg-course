@@ -57,6 +57,10 @@ export async function POST(request: Request) {
       }
 
       try {
+        const planType =
+          (session.metadata?.planType as "lifetime" | "subscription") ??
+          (session.mode === "subscription" ? "subscription" : "lifetime");
+
         await createEnrollmentWithPurchase(
           firebaseUid,
           courseId,
@@ -64,7 +68,8 @@ export async function POST(request: Request) {
           (session.payment_intent as string) ?? "",
           (session.customer as string) ?? "",
           session.amount_total ?? 0,
-          session.currency ?? "usd"
+          session.currency ?? "usd",
+          planType
         );
       } catch (error) {
         console.error("Failed to create enrollment:", error);

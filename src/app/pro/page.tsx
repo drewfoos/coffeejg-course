@@ -14,6 +14,7 @@ const PLANS = [
     price: "$2.00",
     period: "/ year",
     description: "Full access for one year",
+    planType: "subscription" as const,
     features: [
       "All course lessons",
       "Progress tracking",
@@ -27,6 +28,7 @@ const PLANS = [
     price: "$5.00",
     period: "one-time",
     description: "Pay once, learn forever",
+    planType: "lifetime" as const,
     features: [
       "All course lessons",
       "Progress tracking",
@@ -115,6 +117,7 @@ export default async function ProPage() {
                   price={plan.price}
                   label={`Get ${plan.name}`}
                   variant={plan.popular ? "default" : "outline"}
+                  planType={plan.planType}
                 />
 
                 <Separator className="my-6" />

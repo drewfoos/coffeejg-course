@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -46,6 +47,7 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --color-highlight: var(--highlight);
 }
 
 /*
@@ -92,6 +94,7 @@
   --sidebar-accent-foreground: oklch(0.28 0.04 280);
   --sidebar-border: oklch(0.89 0.025 285);
   --sidebar-ring: oklch(0.49 0.22 280);
+  --highlight: oklch(0.852 0.199 91.936);
 }
 
 /* Dark — deep violet-navy, lavender text */
@@ -127,6 +130,7 @@
   --sidebar-accent-foreground: oklch(0.90 0.015 285);
   --sidebar-border: oklch(0.30 0.03 280);
   --sidebar-ring: oklch(0.65 0.20 280);
+  --highlight: oklch(0.852 0.199 91.936);
 }
 
 @layer base {
@@ -143,6 +147,84 @@
   [role="button"] {
     cursor: pointer;
   }
+}
+
+/*
+ * Plate article renderer — override tight editor spacing
+ * for proper reading typography on the course lesson page.
+ */
+.plate-article {
+  color: var(--foreground);
+  font-size: 1rem;
+  line-height: 1.75;
+}
+/* Paragraphs */
+.plate-article [data-slate-node="element"][data-block-type="p"] {
+  margin-top: 0;
+  margin-bottom: 1em;
+  padding: 0;
+}
+/* Headings */
+.plate-article h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-top: 2em;
+  margin-bottom: 0.75em;
+  line-height: 1.3;
+}
+.plate-article h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 1.75em;
+  margin-bottom: 0.5em;
+  line-height: 1.35;
+}
+.plate-article h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  line-height: 1.4;
+}
+/* First heading shouldn't have top margin */
+.plate-article > div > [data-slate-node="element"]:first-child h1,
+.plate-article > div > [data-slate-node="element"]:first-child h2,
+.plate-article > div > [data-slate-node="element"]:first-child h3,
+.plate-article > div > h1:first-child,
+.plate-article > div > h2:first-child,
+.plate-article > div > h3:first-child {
+  margin-top: 0;
+}
+/* Blockquotes */
+.plate-article blockquote {
+  margin-top: 1em;
+  margin-bottom: 1em;
+  padding-left: 1.25em;
+  border-left-width: 3px;
+  border-color: var(--border);
+  color: var(--muted-foreground);
+}
+/* Inline code */
+.plate-article code:not(pre code) {
+  background: var(--muted);
+  padding: 0.2em 0.4em;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+}
+/* Images */
+.plate-article img {
+  border-radius: 0.5rem;
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+/* Horizontal rules */
+.plate-article hr {
+  margin-top: 2em;
+  margin-bottom: 2em;
+}
+/* Strong and emphasis */
+.plate-article strong {
+  font-weight: 700;
 }
 
 /* Hide scrollbar but keep scrollable */

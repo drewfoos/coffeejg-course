@@ -9,14 +9,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 
 interface UserMenuProps {
   userName: string;
+  photoURL: string | null;
 }
 
-export function UserMenu({ userName }: UserMenuProps) {
+export function UserMenu({ userName, photoURL }: UserMenuProps) {
   const { signOut } = useAuth();
   const router = useRouter();
 
@@ -37,6 +38,7 @@ export function UserMenu({ userName }: UserMenuProps) {
     <DropdownMenu>
       <DropdownMenuTrigger className="outline-none">
         <Avatar className="h-8 w-8">
+          {photoURL && <AvatarImage src={photoURL} alt={userName} />}
           <AvatarFallback className="text-xs">{initials}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
@@ -47,6 +49,9 @@ export function UserMenu({ userName }: UserMenuProps) {
         <DropdownMenuSeparator />
         <Link href="/resources/favorites">
           <DropdownMenuItem>My Favorites</DropdownMenuItem>
+        </Link>
+        <Link href="/settings">
+          <DropdownMenuItem>Settings</DropdownMenuItem>
         </Link>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut}>Sign Out</DropdownMenuItem>

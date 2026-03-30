@@ -1,4 +1,8 @@
 import type { Timestamp } from "firebase-admin/firestore";
+// Plate editor stores content as an array of Slate nodes (JSON-serializable).
+// We use a permissive type here since Firestore deserializes to plain objects.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type PlateValue = any[];
 
 // Helper to convert Firestore Timestamps to ISO strings for client serialization
 export function serializeTimestamp(ts: Timestamp | undefined | null): string {
@@ -33,6 +37,7 @@ export interface Enrollment {
   enrolledAt: string;
   status: "active" | "revoked";
   source: "purchase" | "gift" | "promo";
+  planType?: "lifetime" | "subscription";
 }
 
 export interface Purchase {
@@ -51,6 +56,7 @@ export interface Course {
   slug: string;
   description: string;
   stripePriceId: string;
+  stripeSubPriceId?: string;
   isFree: boolean;
   thumbnailUrl: string;
   publishedAt: string;
@@ -66,7 +72,11 @@ export interface Lesson {
   section?: string;
   description?: string;
   topics?: string[];
+  content?: string; // Markdown content for the lesson article
+  blocks?: PlateValue; // Rich content editor (Plate.js) value
 }
+
+export type { PlateValue };
 
 export interface Progress {
   userId: string;

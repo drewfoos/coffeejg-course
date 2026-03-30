@@ -8,7 +8,11 @@ import { setSessionCookie } from "@/lib/auth/session";
 import { createUserDocIfNotExists } from "@/lib/auth/create-user-doc";
 import { Button } from "@/components/ui/button";
 
-export function GoogleSignInButton() {
+interface GoogleSignInButtonProps {
+  redirectTo?: string;
+}
+
+export function GoogleSignInButton({ redirectTo }: GoogleSignInButtonProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -20,7 +24,7 @@ export function GoogleSignInButton() {
       const idToken = await credential.user.getIdToken();
       await setSessionCookie(idToken);
       await createUserDocIfNotExists(idToken, "google");
-      router.push("/");
+      router.push(redirectTo || "/");
     } catch {
       // User cancelled or error - silently handle
     } finally {
@@ -31,7 +35,7 @@ export function GoogleSignInButton() {
   return (
     <Button
       variant="outline"
-      className="w-full"
+      className="h-11 w-full text-sm font-medium"
       onClick={handleGoogleSignIn}
       disabled={loading}
     >

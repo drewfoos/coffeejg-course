@@ -51,7 +51,7 @@ export async function Navbar() {
           </Link>
           <ThemeToggle />
           {user ? (
-            <UserMenu userName={user.name || user.email} />
+            <UserMenu userName={user.name || user.email} photoURL={user.photoURL} />
           ) : (
             <Link
               href="/login"

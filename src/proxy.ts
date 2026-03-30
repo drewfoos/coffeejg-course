@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const protectedPaths = ["/resources/favorites", "/checkout"];
+const protectedPaths = ["/resources/favorites", "/checkout", "/admin"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -36,5 +36,6 @@ export const config = {
     "/login",
     "/signup",
     "/forgot-password",
+    "/admin/:path*",
   ],
 };

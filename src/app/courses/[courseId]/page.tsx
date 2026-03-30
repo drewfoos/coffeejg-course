@@ -23,55 +23,67 @@ export default async function CoursePage({
 }) {
   const { courseId } = await params;
 
-  const [course, lessons] = await Promise.all([
+  const [course, lessons, user] = await Promise.all([
     getCourse(courseId),
     getLessons(courseId),
+    getCurrentUser(),
   ]);
 
   if (!course) notFound();
 
-  // Redirect straight to the first lesson like NeetCode — no content rendered
-  if (lessons.length > 0) {
-    redirect(`/courses/${courseId}/lessons/${lessons[0].id}`);
-  }
-  // Below only renders when course has zero lessons (edge case)
-
-  const user = await getCurrentUser();
-
-  let enrollment = null;
+  let isEnrolled = false;
   let progress = new Map<string, boolean>();
 
   if (user) {
-    const [enrollmentResult, progressResult] = await Promise.all([
+    const [enrollment, progressResult] = await Promise.all([
       getEnrollment(user.uid, courseId),
       getCourseProgress(user.uid, courseId),
     ]);
-    enrollment = enrollmentResult;
-    if (enrollment?.status === "active") {
+    isEnrolled = enrollment?.status === "active";
+    if (isEnrolled) {
       progress = progressResult;
     }
   }
 
-  const isEnrolled = enrollment?.status === "active";
+  // Enrolled users go straight to the first lesson
+  if (isEnrolled && lessons.length > 0) {
+    redirect(`/courses/${courseId}/lessons/${lessons[0].id}`);
+  }
+
   const completedCount = [...progress.values()].filter(Boolean).length;
   const firstLesson = lessons[0];
+  const totalDuration = lessons.reduce((sum, l) => sum + l.durationSeconds, 0);
+  const freeCount = lessons.filter((l) => l.isFree).length;
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-8">
       {/* Hero */}
       <div className="mb-8">
-        <div className="relative mb-6 aspect-video w-full overflow-hidden rounded-lg bg-muted">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={course.thumbnailUrl}
-            alt={course.title}
-            className="h-full w-full object-cover"
-          />
-        </div>
+        {course.thumbnailUrl && (
+          <div className="relative mb-6 aspect-video w-full overflow-hidden rounded-lg bg-muted">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={course.thumbnailUrl}
+              alt={course.title}
+              className="h-full w-full object-cover"
+            />
+          </div>
+        )}
         <h1 className="text-3xl font-bold">{course.title}</h1>
         <p className="mt-3 text-lg text-muted-foreground">
           {course.description}
         </p>
+        <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
+          <span>{lessons.length} lessons</span>
+          <span>&middot;</span>
+          <span>{formatDuration(totalDuration)} total</span>
+          {freeCount > 0 && (
+            <>
+              <span>&middot;</span>
+              <span>{freeCount} free preview{freeCount > 1 ? "s" : ""}</span>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-8 md:grid-cols-3">
@@ -80,43 +92,47 @@ export default async function CoursePage({
           <h2 className="mb-4 text-xl font-semibold">
             Lessons ({lessons.length})
           </h2>
-          {isEnrolled && (
-            <p className="mb-4 text-sm text-muted-foreground">
-              {completedCount} of {lessons.length} completed
-            </p>
-          )}
           <div className="space-y-2">
             {lessons.map((lesson) => {
-              const isCompleted = progress.get(lesson.id) ?? false;
               const isAccessible = lesson.isFree || isEnrolled;
 
               return (
                 <Card key={lesson.id}>
                   <CardContent className="flex items-center gap-4 p-4">
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-sm">
-                      {isCompleted ? (
-                        <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                        </svg>
-                      ) : (
-                        lesson.order
-                      )}
+                      {lesson.order}
                     </span>
                     <div className="flex-1">
-                      <Link
-                        href={`/courses/${courseId}/lessons/${lesson.id}`}
-                        className="font-medium hover:underline"
-                      >
-                        {lesson.title}
-                      </Link>
+                      {isAccessible ? (
+                        <Link
+                          href={`/courses/${courseId}/lessons/${lesson.id}`}
+                          className="font-medium hover:underline"
+                        >
+                          {lesson.title}
+                        </Link>
+                      ) : (
+                        <span className="font-medium text-muted-foreground">
+                          {lesson.title}
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       {lesson.isFree && (
                         <Badge variant="secondary">Free</Badge>
                       )}
                       {!isAccessible && (
-                        <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                        <svg
+                          className="h-4 w-4 text-muted-foreground"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={2}
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
+                          />
                         </svg>
                       )}
                       <span className="text-sm text-muted-foreground">
@@ -127,12 +143,17 @@ export default async function CoursePage({
                 </Card>
               );
             })}
+            {lessons.length === 0 && (
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                No lessons available yet.
+              </p>
+            )}
           </div>
         </div>
 
         {/* Sidebar */}
         <div>
-          <div className="sticky top-8">
+          <div className="sticky top-20">
             <Card>
               <CardContent className="p-6">
                 {isEnrolled ? (
@@ -141,18 +162,20 @@ export default async function CoursePage({
                       Enrolled
                     </p>
                     <Separator />
+                    <p className="text-sm text-muted-foreground">
+                      {completedCount} of {lessons.length} completed
+                    </p>
                     {firstLesson && (
-                      <Link href={`/courses/${courseId}/lessons/${firstLesson.id}`}>
+                      <Link
+                        href={`/courses/${courseId}/lessons/${firstLesson.id}`}
+                      >
                         <Button className="w-full">Go to Course</Button>
                       </Link>
                     )}
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <BuyCourseButton
-                      courseId={courseId}
-                      price="$2.00"
-                    />
+                    <BuyCourseButton courseId={courseId} price="$2.00" />
                     <p className="text-center text-xs text-muted-foreground">
                       One-time payment. Lifetime access.
                     </p>
