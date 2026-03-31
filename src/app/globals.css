@@ -227,6 +227,20 @@
   font-weight: 700;
 }
 
+/* Plyr player — CoffeeJG purple branding */
+.plyr-wrapper {
+  --plyr-color-main: oklch(0.65 0.20 280);
+  --plyr-video-control-color: #fff;
+  --plyr-video-control-color-hover: #fff;
+  --plyr-video-control-background-hover: oklch(0.65 0.20 280);
+  --plyr-range-fill-background: oklch(0.65 0.20 280);
+  --plyr-focus-visible-color: oklch(0.65 0.20 280);
+  --plyr-range-thumb-active-shadow-width: 3px;
+}
+.plyr-wrapper .plyr {
+  border-radius: var(--radius);
+}
+
 /* Hide scrollbar but keep scrollable */
 .scrollbar-none {
   -ms-overflow-style: none;

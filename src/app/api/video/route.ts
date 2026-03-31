@@ -58,11 +58,11 @@ export async function GET(request: NextRequest) {
 
   // During development, YouTube IDs are 11 chars
   const isYouTube = lesson.vimeoVideoId.length === 11;
-  const embedUrl = isYouTube
-    ? `https://www.youtube.com/embed/${lesson.vimeoVideoId}`
-    : `https://player.vimeo.com/video/${lesson.vimeoVideoId}?dnt=1`;
 
-  return NextResponse.json({ embedUrl }, {
+  return NextResponse.json({
+    provider: isYouTube ? "youtube" : "vimeo",
+    videoId: lesson.vimeoVideoId,
+  }, {
     headers: {
       ...CORS_HEADERS,
       "Cache-Control": "private, max-age=3600",

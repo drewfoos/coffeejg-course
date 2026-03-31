@@ -12,7 +12,7 @@ Next.js on Vercel
   ├── Firebase Auth (identity + tokens)
   ├── Firestore (all application data)
   ├── Stripe (payment sessions + webhooks)
-  └── Vimeo (embedded video player)
+  └── Vimeo / YouTube (video via Plyr player)
 ```
 
 ## Main Components
@@ -23,7 +23,7 @@ Next.js on Vercel
 | **Firebase Auth** | Client SDK handles sign-up/login UI. Admin SDK verifies tokens server-side. |
 | **Firestore** | All data: users, enrollments, purchases, courses, lessons, progress, assets, favorites |
 | **Stripe Checkout** | Hosted payment page. Webhook delivers payment confirmation. |
-| **Vimeo** | Domain-restricted video embeds. App controls who sees the player. |
+| **Vimeo / YouTube** | Video embeds wrapped with Plyr for custom branded controls. App controls who sees the player. |
 
 ## Authentication Flow
 
@@ -102,7 +102,7 @@ Server Component runs this check on every lesson page load:
 3. Read `enrollments/{uid}::{courseId}`. If exists and `status === "active"` → allow access.
 4. Otherwise → show locked state with purchase CTA.
 
-Video embed URLs are resolved server-side via `/api/video` route, which re-verifies auth and enrollment before returning the embed URL. Vimeo video IDs never appear in RSC payloads or client-side code. Lesson article content (description, topics) is also gated — only sidebar metadata (title, order, duration, section) is sent to client components.
+Video embed URLs are resolved server-side via `/api/video` route, which re-verifies auth and enrollment before returning `{ provider, videoId }`. The client-side Plyr player renders custom branded controls (CoffeeJG purple) over the Vimeo/YouTube iframe, hiding all native chrome. Vimeo video IDs never appear in RSC payloads or client-side code. Right-click is disabled on the player container. Lesson article content (description, topics) is also gated — only sidebar metadata (title, order, duration, section) is sent to client components.
 
 ## Resource Hub Flow
 
