@@ -37,7 +37,11 @@ export interface Enrollment {
   enrolledAt: string;
   status: "active" | "revoked";
   source: "purchase" | "gift" | "promo";
-  planType?: "lifetime" | "subscription";
+  planType?: "lifetime" | "monthly";
+  stripeSubscriptionId?: string;
+  cancelAtPeriodEnd?: boolean;
+  currentPeriodEnd?: string;
+  paymentFailed?: boolean;
 }
 
 export interface Purchase {

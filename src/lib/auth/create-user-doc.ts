@@ -17,16 +17,17 @@ export async function createUserDocIfNotExists(
   const uid = decoded.uid;
 
   const userRef = adminDb.collection("users").doc(uid);
-  const doc = await userRef.get();
 
-  if (doc.exists) return;
-
-  await userRef.set({
-    displayName: decoded.name ?? "",
-    email: decoded.email ?? "",
-    authProvider,
-    stripeCustomerId: null,
-    createdAt: FieldValue.serverTimestamp(),
-    updatedAt: FieldValue.serverTimestamp(),
-  });
+  // Use set+merge so we never clobber a stripeCustomerId that
+  // the webhook may have already written (race during fast purchase after signup)
+  await userRef.set(
+    {
+      displayName: decoded.name ?? "",
+      email: decoded.email ?? "",
+      authProvider,
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    },
+    { merge: true }
+  );
 }

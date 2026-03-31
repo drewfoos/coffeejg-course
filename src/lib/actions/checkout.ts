@@ -7,8 +7,11 @@ import { stripe } from "@/lib/stripe";
 import { validateId } from "@/lib/validation";
 import { checkoutLimiter } from "@/lib/rate-limit";
 
+export type PlanType = "lifetime" | "monthly";
+
 export async function createCheckoutSession(
-  courseId: string
+  courseId: string,
+  planType: PlanType = "lifetime"
 ): Promise<string> {
   validateId(courseId, "course ID");
   const user = await getCurrentUser();
@@ -24,7 +27,14 @@ export async function createCheckoutSession(
   // Check if already enrolled
   const existing = await getEnrollment(user.uid, courseId);
   if (existing?.status === "active") {
-    throw new Error("You already have access to this course.");
+    // Only allow upgrading from monthly → lifetime.
+    // All other cases (already lifetime, or buying monthly when already monthly) are blocked.
+    const isUpgrading =
+      existing.planType === "monthly" && planType === "lifetime";
+
+    if (!isUpgrading) {
+      throw new Error("You already have access to this course.");
+    }
   }
 
   // Verify the course exists
@@ -33,8 +43,12 @@ export async function createCheckoutSession(
     throw new Error("Course not found.");
   }
 
-  // Single global price for all courses — set in environment variable
-  const priceId = process.env.STRIPE_PRICE_ID;
+  // Pick the right price and checkout mode
+  const isSubscription = planType === "monthly";
+  const priceId = isSubscription
+    ? process.env.STRIPE_MONTHLY_PRICE_ID
+    : process.env.STRIPE_LIFETIME_PRICE_ID;
+
   if (!priceId) {
     throw new Error("Payment is not configured.");
   }
@@ -42,9 +56,14 @@ export async function createCheckoutSession(
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
   const session = await stripe.checkout.sessions.create({
-    mode: "payment",
+    mode: isSubscription ? "subscription" : "payment",
     line_items: [{ price: priceId, quantity: 1 }],
-    metadata: { firebaseUid: user.uid, courseId, planType: "lifetime" },
+    metadata: { firebaseUid: user.uid, courseId, planType },
+    ...(isSubscription && {
+      subscription_data: {
+        metadata: { firebaseUid: user.uid, courseId, planType },
+      },
+    }),
     client_reference_id: user.uid,
     success_url: `${appUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${appUrl}/courses/${courseId}`,

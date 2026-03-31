@@ -30,6 +30,12 @@ export default async function AdminLayout({
           >
             Courses
           </Link>
+          <Link
+            href="/admin/users"
+            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Users
+          </Link>
           <div className="ml-auto text-xs text-muted-foreground">
             {user.email}
           </div>

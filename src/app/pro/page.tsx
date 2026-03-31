@@ -8,29 +8,57 @@ import { Separator } from "@/components/ui/separator";
 import { Check, Video, BarChart3, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { stripe } from "@/lib/stripe";
+import type { PlanType } from "@/lib/actions/checkout";
 
 const COURSE_ID = "3d-vtubing-with-warudo";
 
-let cachedPrice: { label: string; expiresAt: number } | null = null;
+// Cache both prices in memory to avoid hitting Stripe on every page load
+let priceCache: { data: { lifetime: string; monthly: string; monthlyInterval: string }; expiresAt: number } | null = null;
 const PRICE_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-async function getPrice(): Promise<string> {
-  if (cachedPrice && Date.now() < cachedPrice.expiresAt) {
-    return cachedPrice.label;
+async function getPrices(): Promise<{ lifetime: string; monthly: string; monthlyInterval: string }> {
+  if (priceCache && Date.now() < priceCache.expiresAt) {
+    return priceCache.data;
   }
-  const priceId = process.env.STRIPE_PRICE_ID;
-  if (!priceId) return "$5.00";
+
+  const lifetimeId = process.env.STRIPE_LIFETIME_PRICE_ID;
+  const monthlyId = process.env.STRIPE_MONTHLY_PRICE_ID;
+
+  const defaults = { lifetime: "$2.00", monthly: "$5.00", monthlyInterval: "/year" };
+
   try {
-    const price = await stripe.prices.retrieve(priceId);
-    if (price.unit_amount == null) return "$5.00";
-    const amount = (price.unit_amount / 100).toFixed(2);
-    const currency = (price.currency ?? "usd").toUpperCase();
-    const symbol = currency === "USD" ? "$" : currency + " ";
-    const label = `${symbol}${amount}`;
-    cachedPrice = { label, expiresAt: Date.now() + PRICE_CACHE_TTL };
-    return label;
+    const [lifetimePrice, monthlyPrice] = await Promise.all([
+      lifetimeId ? stripe.prices.retrieve(lifetimeId) : null,
+      monthlyId ? stripe.prices.retrieve(monthlyId) : null,
+    ]);
+
+    const formatPrice = (p: { unit_amount: number | null; currency: string } | null, fallback: string) => {
+      if (!p || p.unit_amount == null) return fallback;
+      const amount = (p.unit_amount / 100).toFixed(2);
+      const currency = (p.currency ?? "usd").toUpperCase();
+      const symbol = currency === "USD" ? "$" : currency + " ";
+      return `${symbol}${amount}`;
+    };
+
+    const intervalMap: Record<string, string> = {
+      day: "/day",
+      week: "/week",
+      month: "/mo",
+      year: "/year",
+    };
+    const interval = monthlyPrice?.recurring?.interval ?? "month";
+    const monthlyInterval = intervalMap[interval] || `/${interval}`;
+
+    const data = {
+      lifetime: formatPrice(lifetimePrice, defaults.lifetime),
+      monthly: formatPrice(monthlyPrice, defaults.monthly),
+      monthlyInterval,
+    };
+
+    priceCache = { data, expiresAt: Date.now() + PRICE_CACHE_TTL };
+    return data;
   } catch {
-    return "$5.00";
+    return defaults;
   }
 }
 
@@ -53,28 +81,57 @@ const PERKS = [
 ];
 
 export default async function ProPage() {
-  const [user, priceLabel] = await Promise.all([
+  const [user, prices] = await Promise.all([
     getCurrentUser(),
-    getPrice(),
+    getPrices(),
   ]);
   const enrollment = user
     ? await getEnrollment(user.uid, COURSE_ID)
     : null;
   const isEnrolled = enrollment?.status === "active";
+  const isCancelling = isEnrolled && enrollment?.cancelAtPeriodEnd === true;
+  const isMonthly = isEnrolled && enrollment?.planType === "monthly";
+  const isLifetime = isEnrolled && enrollment?.planType === "lifetime";
+  // Show plans if not enrolled, or on monthly (upgrade to lifetime only)
+  const showPlans = !isEnrolled || isMonthly;
 
-  const plan = {
-    name: "Lifetime Access",
-    price: priceLabel,
-    period: "one-time",
-    description: "Pay once, learn forever",
-    features: [
-      "All course lessons",
-      "Progress tracking",
-      "Lifetime access — never expires",
-      "All future courses and updates",
-    ],
-    popular: true,
-  };
+  const plans: {
+    name: string;
+    price: string;
+    period: string;
+    planType: PlanType;
+    description: string;
+    features: string[];
+    popular: boolean;
+  }[] = [
+    {
+      name: "Monthly Access",
+      price: prices.monthly,
+      period: prices.monthlyInterval,
+      planType: "monthly",
+      description: "Flexible, cancel anytime",
+      features: [
+        "All course lessons",
+        "Progress tracking",
+        "Cancel anytime",
+      ],
+      popular: false,
+    },
+    {
+      name: "Lifetime Access",
+      price: prices.lifetime,
+      period: "one-time",
+      planType: "lifetime",
+      description: "Pay once, learn forever",
+      features: [
+        "All course lessons",
+        "Progress tracking",
+        "Lifetime access — never expires",
+        "All future courses and updates",
+      ],
+      popular: true,
+    },
+  ];
 
   return (
     <main>
@@ -101,7 +158,7 @@ export default async function ProPage() {
 
       {/* Plans or Enrolled state */}
       <section className="relative -mt-4 pb-20">
-        {isEnrolled ? (
+        {isLifetime ? (
           <div className="mx-auto max-w-md px-4 text-center">
             <Card className="border-primary/30 shadow-lg shadow-primary/10">
               <CardContent className="p-8 space-y-4">
@@ -122,50 +179,86 @@ export default async function ProPage() {
             </Card>
           </div>
         ) : (
-          <div className="mx-auto max-w-md px-4">
-              <Card className="relative overflow-hidden border-primary shadow-lg shadow-primary/10">
-                <div className="absolute top-0 right-0 rounded-bl-lg bg-gradient-to-r from-primary to-pink-500 px-3 py-1 text-xs font-semibold text-primary-foreground">
-                  BEST VALUE
-                </div>
-                <CardContent className="flex h-full flex-col p-8">
-                  <div className="mb-6">
-                    <h3 className="text-xl font-semibold">{plan.name}</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {plan.description}
-                    </p>
-                  </div>
+          <div className="mx-auto max-w-3xl px-4">
+            {isCancelling && enrollment?.currentPeriodEnd && (
+              <div className="mb-6 rounded-lg border border-orange-500/20 bg-orange-500/5 p-4 text-center text-sm text-muted-foreground">
+                Your current subscription ends{" "}
+                <strong>
+                  {new Date(enrollment.currentPeriodEnd).toLocaleDateString(
+                    undefined,
+                    { month: "long", day: "numeric", year: "numeric" }
+                  )}
+                </strong>
+                . Choose a plan below to keep your access.
+              </div>
+            )}
+            {isMonthly && (
+              <div className="mb-6 rounded-lg border border-primary/20 bg-primary/5 p-4 text-center text-sm text-muted-foreground">
+                You&apos;re on a monthly plan. Upgrade to lifetime for permanent access.
+              </div>
+            )}
+            <div className={`grid gap-8 ${isMonthly ? "max-w-md mx-auto" : "md:grid-cols-2"}`}>
+              {plans.filter((plan) => {
+                // Monthly subscribers (active or cancelling) only see the lifetime upgrade
+                if (isMonthly) return plan.planType === "lifetime";
+                return true;
+              }).map((plan) => (
+                <Card
+                  key={plan.name}
+                  className={`relative overflow-hidden transition-shadow ${
+                    plan.popular
+                      ? "border-primary shadow-lg shadow-primary/10"
+                      : "hover:shadow-md"
+                  }`}
+                >
+                  {plan.popular && (
+                    <div className="absolute top-0 right-0 rounded-bl-lg bg-gradient-to-r from-primary to-pink-500 px-3 py-1 text-xs font-semibold text-primary-foreground">
+                      BEST VALUE
+                    </div>
+                  )}
+                  <CardContent className="flex h-full flex-col p-8">
+                    <div className="mb-6">
+                      <h3 className="text-xl font-semibold">{plan.name}</h3>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {plan.description}
+                      </p>
+                    </div>
 
-                  <div className="mb-6">
-                    <span className="text-4xl font-bold">{plan.price}</span>
-                    <span className="ml-1 text-muted-foreground">
-                      {plan.period}
-                    </span>
-                  </div>
+                    <div className="mb-6">
+                      <span className="text-4xl font-bold">{plan.price}</span>
+                      <span className="ml-1 text-muted-foreground">
+                        {plan.period}
+                      </span>
+                    </div>
 
-                  <BuyCourseButton
-                    courseId={COURSE_ID}
-                    price={plan.price}
-                    label={`Get ${plan.name}`}
-                  />
+                    <BuyCourseButton
+                      courseId={COURSE_ID}
+                      price={plan.price}
+                      planType={plan.planType}
+                      label={`Get ${plan.name}`}
+                      variant={plan.popular ? "default" : "outline"}
+                    />
 
-                  <Separator className="my-6" />
+                    <Separator className="my-6" />
 
-                  <ul className="flex-1 space-y-3">
-                    {plan.features.map((feature) => (
-                      <li
-                        key={feature}
-                        className="flex items-start gap-3 text-sm"
-                      >
-                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            Secure payment powered by Stripe.
-          </p>
+                    <ul className="flex-1 space-y-3">
+                      {plan.features.map((feature) => (
+                        <li
+                          key={feature}
+                          className="flex items-start gap-3 text-sm"
+                        >
+                          <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            <p className="mt-6 text-center text-sm text-muted-foreground">
+              Secure payment powered by Stripe.
+            </p>
           </div>
         )}
       </section>

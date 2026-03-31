@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { adminDb } from "@/lib/firebase/admin";
-import { createEnrollmentWithPurchase } from "@/lib/firestore/enrollments";
+import {
+  createEnrollmentWithPurchase,
+  markCancelAtPeriodEnd,
+  revokeEnrollmentBySubscription,
+  updateEnrollmentStatus,
+} from "@/lib/firestore/enrollments";
+import { makeEnrollmentId } from "@/lib/constants";
 import type Stripe from "stripe";
 
 export const dynamic = "force-dynamic";
@@ -34,50 +40,189 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid signature." }, { status: 400 });
   }
 
-  // Deduplicate webhook events to prevent replay attacks
+  // Deduplicate webhook events using a transaction to prevent concurrent replays
   const eventRef = adminDb.collection("processedEvents").doc(event.id);
-  const eventDoc = await eventRef.get();
-  if (eventDoc.exists) {
+  const alreadyProcessed = await adminDb.runTransaction(async (tx) => {
+    const eventDoc = await tx.get(eventRef);
+    if (eventDoc.exists) return true;
+    // Claim this event so concurrent duplicates see it as processed
+    tx.set(eventRef, { claimedAt: new Date().toISOString() });
+    return false;
+  });
+  if (alreadyProcessed) {
     return NextResponse.json({ received: true }, { status: 200 });
   }
 
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object as Stripe.Checkout.Session;
+  try {
+    switch (event.type) {
+      case "checkout.session.completed": {
+        const session = event.data.object as Stripe.Checkout.Session;
 
-    if (session.payment_status === "paid") {
-      const firebaseUid = session.metadata?.firebaseUid;
-      const courseId = session.metadata?.courseId;
+        if (session.payment_status === "paid") {
+          const firebaseUid = session.metadata?.firebaseUid;
+          const courseId = session.metadata?.courseId;
+          const rawPlanType = session.metadata?.planType;
+          const planType: "lifetime" | "monthly" =
+            rawPlanType === "monthly" ? "monthly" : "lifetime";
 
-      if (!firebaseUid || !courseId) {
-        console.error("Missing metadata in checkout session:", session.id);
-        return NextResponse.json(
-          { error: "Missing metadata." },
-          { status: 400 }
-        );
+          if (!firebaseUid || !courseId) {
+            // Return 200 so Stripe doesn't endlessly retry an unfixable event
+            console.error(
+              "Missing metadata in checkout session:",
+              session.id
+            );
+            break;
+          }
+
+          const stripeSubscriptionId =
+            session.mode === "subscription"
+              ? (session.subscription as string)
+              : undefined;
+
+          // Check existing enrollment to handle upgrades and prevent downgrades
+          const enrollmentId = makeEnrollmentId(firebaseUid, courseId);
+          const existingEnrollment = await adminDb
+            .collection("enrollments")
+            .doc(enrollmentId)
+            .get();
+          const existingData = existingEnrollment.data();
+
+          // Never downgrade lifetime → monthly (even if a stale session completes)
+          if (
+            existingData?.status === "active" &&
+            existingData?.planType === "lifetime" &&
+            planType === "monthly"
+          ) {
+            // Immediately cancel the new subscription so user isn't billed
+            if (stripeSubscriptionId) {
+              try {
+                await stripe.subscriptions.cancel(stripeSubscriptionId);
+              } catch {
+                // Best effort
+              }
+            }
+            break;
+          }
+
+          // If user had an old subscription, cancel it before creating new enrollment
+          // (e.g. upgrading monthly → lifetime, or re-subscribing after cancel)
+          const oldSubId = existingData?.stripeSubscriptionId;
+          if (
+            oldSubId &&
+            oldSubId !== stripeSubscriptionId
+          ) {
+            try {
+              await stripe.subscriptions.cancel(oldSubId);
+            } catch {
+              // Old subscription may already be cancelled
+            }
+          }
+
+          await createEnrollmentWithPurchase(
+            firebaseUid,
+            courseId,
+            session.id,
+            (session.payment_intent as string) ?? "",
+            (session.customer as string) ?? "",
+            session.amount_total ?? 0,
+            session.currency ?? "usd",
+            planType,
+            stripeSubscriptionId
+          );
+        }
+        break;
       }
 
-      try {
-        await createEnrollmentWithPurchase(
-          firebaseUid,
-          courseId,
-          session.id,
-          (session.payment_intent as string) ?? "",
-          (session.customer as string) ?? "",
-          session.amount_total ?? 0,
-          session.currency ?? "usd",
-          "lifetime"
-        );
-      } catch (error) {
-        console.error("Failed to create enrollment:", error);
-        return NextResponse.json(
-          { error: "Failed to process enrollment." },
-          { status: 500 }
-        );
+      case "customer.subscription.updated": {
+        const subscription = event.data.object as Stripe.Subscription;
+        const metadata = subscription.metadata;
+        const firebaseUid = metadata?.firebaseUid;
+        const courseId = metadata?.courseId;
+
+        if (firebaseUid && courseId) {
+          const enrollId = makeEnrollmentId(firebaseUid, courseId);
+          // Only update if this subscription is still the active one on the enrollment
+          const enrollDoc = await adminDb
+            .collection("enrollments")
+            .doc(enrollId)
+            .get();
+          if (enrollDoc.data()?.stripeSubscriptionId === subscription.id) {
+            const periodEnd =
+              subscription.items.data[0]?.current_period_end;
+
+            await markCancelAtPeriodEnd(
+              enrollId,
+              subscription.cancel_at_period_end,
+              periodEnd ? new Date(periodEnd * 1000) : undefined
+            );
+
+            // If subscription went past_due or unpaid, revoke access
+            if (
+              subscription.status === "past_due" ||
+              subscription.status === "unpaid"
+            ) {
+              await updateEnrollmentStatus(enrollId, "revoked");
+            }
+            // If subscription is re-activated (e.g. payment succeeded after past_due)
+            if (subscription.status === "active") {
+              await updateEnrollmentStatus(enrollId, "active");
+            }
+          }
+        }
+        break;
       }
+
+      case "customer.subscription.deleted": {
+        // Subscription actually ended — revoke access
+        const subscription = event.data.object as Stripe.Subscription;
+        await revokeEnrollmentBySubscription(subscription.id);
+        break;
+      }
+
+      case "invoice.payment_failed": {
+        // A subscription renewal payment failed
+        const invoice = event.data.object as Stripe.Invoice;
+        const subRef = invoice.parent?.subscription_details?.subscription;
+        const subId =
+          typeof subRef === "string" ? subRef : subRef?.id ?? null;
+
+        if (subId) {
+          // Look up the enrollment by subscription ID and mark it
+          const snapshot = await adminDb
+            .collection("enrollments")
+            .where("stripeSubscriptionId", "==", subId)
+            .limit(1)
+            .get();
+
+          if (!snapshot.empty) {
+            // Mark as payment_failed so the UI can show a warning
+            await snapshot.docs[0].ref.update({
+              paymentFailed: true,
+            });
+          }
+        }
+        break;
+      }
+
+      default:
+        // Unhandled event type — acknowledge without processing
+        return NextResponse.json({ received: true }, { status: 200 });
     }
 
-    // Mark event as processed only after successful handling
-    await eventRef.set({ processedAt: new Date().toISOString() });
+    // Mark event as fully processed (doc was already claimed above)
+    await eventRef.update({ processedAt: new Date().toISOString() });
+  } catch (error) {
+    console.error(`Failed to handle ${event.type}:`, error);
+    // Unclaim the event so Stripe's retry can process it
+    try {
+      await eventRef.delete();
+    } catch {
+      // Best-effort cleanup
+    }
+    return NextResponse.json(
+      { error: "Failed to process event." },
+      { status: 500 }
+    );
   }
 
   return NextResponse.json({ received: true }, { status: 200 });

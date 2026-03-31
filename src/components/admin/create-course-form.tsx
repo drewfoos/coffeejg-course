@@ -87,7 +87,7 @@ export function CreateCourseForm() {
 
         {!isFree && (
           <p className="text-xs text-muted-foreground">
-            Paid courses use the global Stripe price configured in the STRIPE_PRICE_ID environment variable.
+            Paid courses use the Stripe prices configured in environment variables.
           </p>
         )}
       </div>

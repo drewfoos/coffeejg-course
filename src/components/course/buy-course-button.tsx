@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createCheckoutSession } from "@/lib/actions/checkout";
+import type { PlanType } from "@/lib/actions/checkout";
 import { useAuth } from "@/lib/auth/auth-context";
 import { Button } from "@/components/ui/button";
 
 interface BuyCourseButtonProps {
   courseId: string;
   price: string;
+  planType?: PlanType;
   label?: string;
   variant?: "default" | "outline";
 }
@@ -16,6 +18,7 @@ interface BuyCourseButtonProps {
 export function BuyCourseButton({
   courseId,
   price,
+  planType = "lifetime",
   label,
   variant = "default",
 }: BuyCourseButtonProps) {
@@ -33,7 +36,7 @@ export function BuyCourseButton({
     setError("");
     setLoading(true);
     try {
-      const url = await createCheckoutSession(courseId);
+      const url = await createCheckoutSession(courseId, planType);
       window.location.href = url;
     } catch (err) {
       setError(
