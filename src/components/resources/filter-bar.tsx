@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { SourceIcon } from "./source-icon";
+import { ChevronDown } from "lucide-react";
 
 const TAGS = [
   "2D",
@@ -10,16 +11,8 @@ const TAGS = [
   "Overlays & Alerts",
   "Emotes/Stickers/Badges",
   "Character Assets",
-  "Backgrounds",
-  "Panels & Banners",
   "Clothing/Accessories",
-  "Props",
   "Live2D/3D/PNGtuber Models",
-  "Transition Screens",
-  "Debut Assets",
-  "Streaming",
-  "Twitch",
-  "Holiday",
   "VRoid",
   "VRM",
   "VRChat",
@@ -27,68 +20,77 @@ const TAGS = [
 
 const SOURCES = ["Ko-fi", "Booth", "VGen", "Gumroad"];
 
-export function FilterBar() {
+/** Source pills — displayed in the hero section */
+export function SourceFilter() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const activeTag = searchParams.get("tag") ?? "";
   const activeSource = searchParams.get("source") ?? "";
 
-  const updateFilters = (key: string, value: string) => {
+  const updateSource = (value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     if (value) {
-      params.set(key, value);
+      params.set("source", value);
     } else {
-      params.delete(key);
+      params.delete("source");
     }
     params.delete("page");
     router.push(`/resources?${params.toString()}`);
   };
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* Categories — horizontal scroll on mobile, wrap on desktop */}
-      <div className="relative">
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none md:flex-wrap md:justify-center md:overflow-x-visible md:pb-0">
-          <FilterPill
-            label="All Categories"
-            active={activeTag === ""}
-            onClick={() => updateFilters("tag", "")}
-          />
-          {TAGS.map((tag) => (
-            <FilterPill
-              key={tag}
-              label={tag}
-              active={activeTag === tag}
-              onClick={() =>
-                updateFilters("tag", activeTag === tag ? "" : tag)
-              }
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Sources — narrower row beneath */}
-      <div className="flex flex-wrap justify-center gap-2">
+    <div className="flex flex-wrap justify-center gap-2">
+      <FilterPill
+        label="All Sources"
+        active={activeSource === ""}
+        onClick={() => updateSource("")}
+      />
+      {SOURCES.map((source) => (
         <FilterPill
-          label="All Sources"
-          active={activeSource === ""}
-          onClick={() => updateFilters("source", "")}
+          key={source}
+          label={source}
+          icon={<SourceIcon source={source} className="h-3.5 w-3.5" />}
+          active={activeSource === source}
+          onClick={() =>
+            updateSource(activeSource === source ? "" : source)
+          }
         />
-        {SOURCES.map((source) => (
-          <FilterPill
-            key={source}
-            label={source}
-            icon={<SourceIcon source={source} className="h-3.5 w-3.5" />}
-            active={activeSource === source}
-            onClick={() =>
-              updateFilters(
-                "source",
-                activeSource === source ? "" : source
-              )
-            }
-          />
+      ))}
+    </div>
+  );
+}
+
+/** Category dropdown — displayed above results grid */
+export function CategoryFilter() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeTag = searchParams.get("tag") ?? "";
+
+  const updateTag = (value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) {
+      params.set("tag", value);
+    } else {
+      params.delete("tag");
+    }
+    params.delete("page");
+    router.push(`/resources?${params.toString()}`);
+  };
+
+  return (
+    <div className="relative inline-block">
+      <select
+        value={activeTag}
+        onChange={(e) => updateTag(e.target.value)}
+        className="appearance-none rounded-lg border border-border/40 bg-card/60 py-2 pl-3 pr-8 text-sm font-medium text-foreground backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+      >
+        <option value="">All Categories</option>
+        {TAGS.map((tag) => (
+          <option key={tag} value={tag}>
+            {tag}
+          </option>
         ))}
-      </div>
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
     </div>
   );
 }

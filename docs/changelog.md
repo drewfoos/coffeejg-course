@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.5.2 — Performance & Self-Hosted Assets
+## v0.5.2 — Performance, Self-Hosted Assets & Resource Hub UX
 
 ### Performance
 - Home page marquee images self-hosted as optimized WebP (40 images, 1.3MB total)
@@ -10,6 +10,13 @@
 - Settings page queries parallelized with `Promise.all`
 - Admin user listing uses batch `getAll()` instead of N+1 individual reads
 - Admin user search parallelized with `Promise.all`
+- Resource hub: Firestore count and paginated query now run in parallel
+
+### Resource Hub UX
+- Trimmed category tags from 18 to 10 (removed Streaming, Twitch, Debut Assets, Backgrounds, Panels & Banners, Holiday, Props, Transition Screens)
+- Category filter changed to compact dropdown select above results grid
+- Source filters remain as pills in the hero section (only 4 sources)
+- Cleaner mobile experience — no more cluttered tag pills
 
 ### Bug Fixes
 - Settings page now correctly shows "Monthly Subscription" when Stripe keys aren't configured (was incorrectly falling through to "Lifetime Access")

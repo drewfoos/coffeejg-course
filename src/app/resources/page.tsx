@@ -3,7 +3,7 @@ import { getAssets } from "@/lib/firestore/assets";
 import { getFavoriteIds } from "@/lib/firestore/favorites";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
 import { AssetCard } from "@/components/resources/asset-card";
-import { FilterBar } from "@/components/resources/filter-bar";
+import { SourceFilter, CategoryFilter } from "@/components/resources/filter-bar";
 import { PaginationControls } from "@/components/resources/pagination-controls";
 import { SearchBar } from "@/components/resources/search-bar";
 import { HeroParticles } from "@/components/resources/hero-particles";
@@ -64,15 +64,15 @@ export default async function ResourcesPage({
             </p>
           </div>
 
-          {/* Filters — centered pyramid */}
-          <div className="pt-10">
+          {/* Source filter pills */}
+          <div className="pt-8">
             <Suspense>
-              <FilterBar />
+              <SourceFilter />
             </Suspense>
           </div>
 
           {/* Search bar + Favorites — inside hero */}
-          <div className="mx-auto mt-8 flex max-w-2xl items-center gap-3 pb-6">
+          <div className="mx-auto mt-6 flex max-w-2xl items-center gap-3 pb-6">
             <div className="flex-1">
               <Suspense>
                 <SearchBar />
@@ -118,14 +118,19 @@ export default async function ResourcesPage({
               ? "No resources found"
               : `${totalCount} resource${totalCount !== 1 ? "s" : ""}`}
           </p>
-          {hasFilters && (
-            <Link
-              href="/resources"
-              className="text-sm text-primary transition-colors hover:text-primary/80"
-            >
-              Clear filters
-            </Link>
-          )}
+          <div className="flex items-center gap-3">
+            {hasFilters && (
+              <Link
+                href="/resources"
+                className="text-sm text-primary transition-colors hover:text-primary/80"
+              >
+                Clear filters
+              </Link>
+            )}
+            <Suspense>
+              <CategoryFilter />
+            </Suspense>
+          </div>
         </div>
 
         {/* Grid */}

@@ -60,15 +60,16 @@ export async function getAssets(
     return { assets, totalCount, page: safePage, totalPages };
   }
 
-  // No search query — use Firestore offset pagination
-  const countSnapshot = await baseQuery.count().get();
+  // No search query — run count and paginated fetch in parallel
+  const offset = (page - 1) * PAGE_SIZE;
+  const [countSnapshot, snapshot] = await Promise.all([
+    baseQuery.count().get(),
+    baseQuery.orderBy("createdAt", "desc").offset(offset).limit(PAGE_SIZE).get(),
+  ]);
+
   const totalCount = countSnapshot.data().count;
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const safePage = Math.max(1, Math.min(page, totalPages));
-  const offset = (safePage - 1) * PAGE_SIZE;
-
-  const query = baseQuery.orderBy("createdAt", "desc").offset(offset).limit(PAGE_SIZE);
-  const snapshot = await query.get();
 
   const assets: AssetWithId[] = snapshot.docs.map((doc) =>
     serializeDoc({ id: doc.id, ...(doc.data() as Asset) })
