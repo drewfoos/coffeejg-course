@@ -1,5 +1,66 @@
 # Changelog
 
+## v0.5.0 — Subscription Management, Admin Users & Payment Hardening
+
+### Subscription System
+- Dual pricing: monthly subscription + lifetime one-time purchase via Stripe
+- Dynamic price display on Pro page fetched from Stripe API (5-min in-memory cache)
+- Cancel subscription at period end (access continues until billing period expires)
+- Resume cancelled subscription before period ends
+- Upgrade path: monthly → lifetime (cancels old subscription, creates new enrollment)
+- Stripe billing portal access from settings page
+- Live subscription details (amount, interval, next billing date) from Stripe API
+
+### Admin Users
+- Admin users list page with Firebase Auth as source of truth (enriched with Firestore data)
+- User detail page with enrollment management
+- Search users by email, name, or UID (exact lookup + fuzzy fallback)
+- Pagination via Firebase Auth page tokens
+- Cancel subscription (end-of-period or immediate)
+- Revoke enrollment (with automatic Stripe subscription cancellation)
+- Delete user account (cancels subscriptions, deletes all Firestore data + Firebase Auth)
+
+### Payment Hardening
+- Webhook event dedup upgraded to transactional claim (prevents concurrent duplicate processing)
+- Failed webhook events unclaimed for Stripe retry
+- `stripeCustomerId` always saved to user doc (even on idempotent replay)
+- Purchase record fallback + backfill for missing `stripeCustomerId`
+- Downgrade prevention: lifetime → monthly blocked at webhook level (unwanted subscription auto-cancelled)
+- Checkout guards: only monthly → lifetime upgrade allowed, all other re-purchases blocked
+- `planType` validated at webhook level (no unsafe cast from metadata)
+- Signup race fix: `createUserDocIfNotExists` uses `set({ merge: true })` to avoid clobbering webhook data
+- Subscription ownership checks on all webhook event handlers
+- `revokeEnrollmentBySubscription` wrapped in Firestore transaction (prevents TOCTOU race)
+- Delete user action cancels subscriptions via both customer ID and enrollment subscription IDs
+
+### Security
+- Security headers: HSTS, X-Frame-Options DENY, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
+- Removed X-Powered-By header (no framework version leak)
+
+### UI
+- Pro page shows upgrade-only option for monthly subscribers
+- Settings page shows live subscription status with cancel/resume controls
+- Admin user detail shows Stripe customer ID, enrollment details, danger zone
+
+## v0.4.0 — Resource Hub Expansion & Landing Page Redesign
+
+### Resources
+- Scraped and curated 176 free VTuber assets across Ko-fi, Booth, VGen, and Gumroad
+- Patched 48 missing image URLs with direct product page images
+- Added Gumroad to source filters
+- Offset-based pagination with Firestore count()
+- Improved card spacing, image placeholders, search
+
+### Landing Page
+- VRM 3D model viewer with animated hero
+- About page, courses listing, error page
+- CTA section, testimonials
+- Custom UI components (3D marquee, pulse beams, wave path)
+
+### Infrastructure
+- Asset merge/patch utility scripts for asset pipeline
+- Reorganized public assets into /images and /models directories
+
 ## v0.3.0 — Security Hardening, Theming & UX Polish
 
 ### Security

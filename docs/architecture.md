@@ -52,6 +52,47 @@ User clicks "Buy" → Server Action creates Stripe Checkout Session
 
 The webhook is the only path that creates enrollments. The success page never writes data.
 
+### Plan Types
+
+- **Lifetime** — One-time Stripe payment. Enrollment has no subscription fields.
+- **Monthly** — Stripe subscription. Enrollment stores `stripeSubscriptionId`, `cancelAtPeriodEnd`, and `currentPeriodEnd`.
+
+### Checkout Guards
+
+The Server Action enforces plan rules before creating a Stripe session:
+- Not enrolled → allow any plan
+- Active monthly → only allow lifetime upgrade
+- Active lifetime → block all purchases
+
+### Webhook Event Handling
+
+| Event | Action |
+|---|---|
+| `checkout.session.completed` | Create enrollment + purchase. Cancel old subscription if upgrading. Block lifetime→monthly downgrade. |
+| `customer.subscription.updated` | Sync `cancelAtPeriodEnd` and `currentPeriodEnd`. Revoke on `past_due`/`unpaid`. Reactivate on `active`. |
+| `customer.subscription.deleted` | Revoke enrollment (transactional, checks subscription ID still matches). |
+| `invoice.payment_failed` | Mark enrollment with `paymentFailed` flag. |
+
+### Webhook Security
+
+1. **Signature verification** — `constructEvent` validates Stripe HMAC before processing.
+2. **Transactional dedup** — Event ID claimed atomically in Firestore. Concurrent duplicates rejected.
+3. **Failed event recovery** — Claimed events deleted on error so Stripe retries succeed.
+4. **Subscription ownership** — All handlers verify subscription ID matches enrollment before modifying.
+5. **Downgrade prevention** — Lifetime→monthly blocked at webhook level; unwanted subscription auto-cancelled.
+
+### Subscription Lifecycle
+
+```
+Active → Cancel (cancel_at_period_end=true) → Period ends → subscription.deleted → Revoke enrollment
+Active → Cancel → Resume (cancel_at_period_end=false) → Active
+Active Monthly → Upgrade to Lifetime → Old subscription cancelled → New lifetime enrollment
+```
+
+### stripeCustomerId Resolution
+
+The `stripeCustomerId` is stored on the Firestore user doc by the webhook. If missing (race condition, old account), all read paths fall back to querying the `purchases` collection and backfill the user doc on first lookup.
+
 ## Lesson Access Flow
 
 Server Component runs this check on every lesson page load:
@@ -76,4 +117,5 @@ Video embed URLs are resolved server-side via `/api/video` route, which re-verif
 - **All mutations are idempotent.** Firestore transactions check before writing. Retries and duplicate webhooks are safe.
 - **Server writes for all data.** All Firestore writes go through the Admin SDK (Server Actions / Route Handlers). Firestore security rules deny all client-side reads and writes.
 - **Input validation at boundaries.** All user-supplied IDs are validated against `^[a-zA-Z0-9_-]{1,128}$` before use in Firestore queries.
-- **Webhook deduplication.** Processed Stripe event IDs are stored in `processedEvents` collection to prevent replay.
+- **Webhook deduplication.** Processed Stripe event IDs are claimed transactionally in `processedEvents` collection. Concurrent duplicates rejected; failed events unclaimed for retry.
+- **Security headers.** HSTS, X-Frame-Options DENY, X-Content-Type-Options nosniff, Permissions-Policy, Referrer-Policy applied via `next.config.ts`. X-Powered-By disabled.
