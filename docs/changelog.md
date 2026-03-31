@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.5.2 — Performance & Self-Hosted Assets
+
+### Performance
+- Home page marquee images self-hosted as optimized WebP (40 images, 1.3MB total)
+- Eliminated external CDN dependency for home page (Ko-fi, Booth, VGen URLs replaced with local files)
+- Home page no longer calls Firestore for resource images (hardcoded static array)
+- Video API response caching (`Cache-Control: private, max-age=3600`)
+- Settings page queries parallelized with `Promise.all`
+- Admin user listing uses batch `getAll()` instead of N+1 individual reads
+- Admin user search parallelized with `Promise.all`
+
+### Bug Fixes
+- Settings page now correctly shows "Monthly Subscription" when Stripe keys aren't configured (was incorrectly falling through to "Lifetime Access")
+
+### Infrastructure
+- Added `scripts/download-resource-images.mjs` utility for downloading and converting resource images to WebP
+
 ## v0.5.1 — Dark Mode Default
 
 ### UI
