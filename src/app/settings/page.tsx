@@ -197,6 +197,19 @@ export default async function SettingsPage() {
               </div>
             )}
           </div>
+        ) : enrollment?.planType === "monthly" ? (
+          /* Monthly plan but Stripe details unavailable */
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                Active
+              </span>
+              <span className="text-sm font-medium">Monthly Subscription</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              You have an active monthly subscription to all course content.
+            </p>
+          </div>
         ) : (
           /* Lifetime plan */
           <div className="space-y-4">
