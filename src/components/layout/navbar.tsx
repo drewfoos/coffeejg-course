@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth/get-current-user";
 import { UserMenu } from "./user-menu";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./theme-toggle";
+import { MobileNav } from "./mobile-nav";
 
 export async function Navbar() {
   const user = await getCurrentUser();
@@ -46,8 +47,8 @@ export async function Navbar() {
         </div>
 
         {/* Right */}
-        <div className="flex items-center gap-5">
-          <Link href="/pro">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Link href="/pro" className="hidden sm:block">
             <Button
               variant="ghost"
               className="cursor-pointer bg-primary/10 text-foreground hover:bg-primary/20 hover:text-primary font-semibold px-5 py-1.5 h-auto text-sm transition-colors"
@@ -66,6 +67,7 @@ export async function Navbar() {
               Sign In
             </Link>
           )}
+          <MobileNav />
         </div>
       </div>
     </header>

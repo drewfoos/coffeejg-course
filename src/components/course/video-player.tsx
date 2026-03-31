@@ -51,9 +51,11 @@ export function VideoPlayer({ courseId, lessonId }: VideoPlayerProps) {
       <iframe
         src={embedUrl}
         className="absolute inset-0 h-full w-full"
-        allow="autoplay; fullscreen; picture-in-picture"
+        allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
         allowFullScreen
         loading="lazy"
+        referrerPolicy="origin"
+        sandbox="allow-scripts allow-same-origin allow-popups allow-presentation"
       />
     </div>
   );

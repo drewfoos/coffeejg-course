@@ -73,43 +73,44 @@ export function Footer() {
       </div>
 
       <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-16">
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Brand */}
-          <div>
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-pink-500 text-primary-foreground shadow-lg">
-                <Coffee className="h-5 w-5" />
-              </div>
-              <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-primary to-pink-500 bg-clip-text text-transparent">
-                CoffeeJG
-              </span>
-            </div>
-            <p className="mb-6 text-sm leading-relaxed text-muted-foreground">
+        {/* Brand row */}
+        <div className="flex items-start gap-4 sm:items-center sm:gap-6">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-pink-500 text-primary-foreground shadow-lg">
+            <Coffee className="h-5 w-5" />
+          </div>
+          <div className="flex-1">
+            <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-primary to-pink-500 bg-clip-text text-transparent">
+              CoffeeJG
+            </span>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground max-w-md">
               Structured courses and curated resources to help you become a
               professional 3D VTuber.
             </p>
-            <div className="flex flex-wrap gap-2">
-              {socials.map(({ icon: Icon, href, label }) => (
-                <a
-                  key={label}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={label}
-                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-all duration-300 hover:border-primary/50 hover:bg-primary hover:text-primary-foreground hover:shadow-md hover:shadow-primary/20"
-                >
-                  <Icon className="h-4 w-4" />
-                </a>
-              ))}
-            </div>
           </div>
+          <div className="hidden sm:flex flex-wrap gap-2">
+            {socials.map(({ icon: Icon, href, label }) => (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={label}
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-all duration-300 hover:border-primary/50 hover:bg-primary hover:text-primary-foreground hover:shadow-md hover:shadow-primary/20"
+              >
+                <Icon className="h-4 w-4" />
+              </a>
+            ))}
+          </div>
+        </div>
 
+        {/* Link columns — 3-col on mobile, 4-col on lg */}
+        <div className="mt-6 grid grid-cols-3 gap-4 sm:gap-8 lg:grid-cols-4">
           {/* Courses */}
           <div>
-            <h4 className="mb-4 text-sm font-semibold uppercase tracking-wider text-foreground">
+            <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-foreground">
               Courses
             </h4>
-            <ul className="space-y-3">
+            <ul className="space-y-2">
               {courses.map(({ label, href }) => (
                 <li key={href}>
                   <Link
@@ -126,10 +127,10 @@ export function Footer() {
 
           {/* Resources */}
           <div>
-            <h4 className="mb-4 text-sm font-semibold uppercase tracking-wider text-foreground">
+            <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-foreground">
               Resources
             </h4>
-            <ul className="space-y-3">
+            <ul className="space-y-2">
               {resources.map(({ label, href }) => (
                 <li key={href}>
                   <Link
@@ -146,10 +147,10 @@ export function Footer() {
 
           {/* Connect */}
           <div>
-            <h4 className="mb-4 text-sm font-semibold uppercase tracking-wider text-foreground">
+            <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-foreground">
               Connect
             </h4>
-            <ul className="space-y-3">
+            <ul className="space-y-2">
               {externalLinks.map(({ label, href }) => (
                 <li key={href}>
                   <a
@@ -175,6 +176,22 @@ export function Footer() {
               </li>
             </ul>
           </div>
+        </div>
+
+        {/* Social icons — mobile only */}
+        <div className="mt-6 flex flex-wrap gap-2 sm:hidden">
+          {socials.map(({ icon: Icon, href, label }) => (
+            <a
+              key={label}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={label}
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-all duration-300 hover:border-primary/50 hover:bg-primary hover:text-primary-foreground hover:shadow-md hover:shadow-primary/20"
+            >
+              <Icon className="h-4 w-4" />
+            </a>
+          ))}
         </div>
 
         {/* Bottom spacer */}

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
 import { adminDb } from "@/lib/firebase/admin";
-import { stripe } from "@/lib/stripe";
+import { stripe, stripeLiveMode } from "@/lib/stripe";
 import { ManageSubscriptionButton } from "@/components/settings/manage-subscription-button";
 import { CancelSubscriptionSection } from "@/components/settings/cancel-subscription-section";
 import Link from "next/link";
@@ -44,6 +44,7 @@ export default async function SettingsPage() {
       .collection("enrollments")
       .where("userId", "==", user.uid)
       .where("status", "==", "active")
+      .where("livemode", "==", stripeLiveMode)
       .limit(1)
       .get(),
     adminDb.collection("users").doc(user.uid).get(),

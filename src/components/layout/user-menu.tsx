@@ -36,8 +36,8 @@ export function UserMenu({ userName, photoURL }: UserMenuProps) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="outline-none">
-        <Avatar className="h-8 w-8">
+      <DropdownMenuTrigger className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary">
+        <Avatar className="h-8 w-8 pointer-events-none">
           {photoURL && <AvatarImage src={photoURL} alt={userName} />}
           <AvatarFallback className="text-xs">{initials}</AvatarFallback>
         </Avatar>

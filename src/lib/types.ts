@@ -42,6 +42,8 @@ export interface Enrollment {
   cancelAtPeriodEnd?: boolean;
   currentPeriodEnd?: string;
   paymentFailed?: boolean;
+  /** Whether this enrollment was created via Stripe live mode (true) or test mode (false) */
+  livemode?: boolean;
 }
 
 export interface Purchase {

@@ -1,7 +1,7 @@
 "use server";
 
 import { getCurrentUser } from "@/lib/auth/get-current-user";
-import { stripe } from "@/lib/stripe";
+import { stripe, stripeLiveMode } from "@/lib/stripe";
 import { adminDb } from "@/lib/firebase/admin";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
@@ -39,6 +39,7 @@ async function getActiveSubscriptionId(uid: string): Promise<string | null> {
     .where("userId", "==", uid)
     .where("status", "==", "active")
     .where("planType", "==", "monthly")
+    .where("livemode", "==", stripeLiveMode)
     .limit(1)
     .get();
 

@@ -1,5 +1,26 @@
 # Changelog
 
+## v0.5.5 — Stripe Livemode Enforcement, Mobile Nav & UI Polish
+
+### Security
+- Stripe test-mode enrollments no longer grant access when running with live keys
+- `livemode` field stored on enrollments at webhook creation time
+- `getEnrollment()` rejects purchase-based enrollments that don't match current Stripe mode
+- Legacy enrollments (missing `livemode`) treated as test mode — safe default
+- Gift/promo enrollments exempt from livemode check
+- Test enrollments cannot overwrite live enrollments in Firestore
+- Webhook downgrade prevention now scoped to same Stripe mode
+- Settings page and billing actions filter enrollments by current Stripe mode
+- Video player iframe sandboxed (`allow-scripts allow-same-origin allow-popups allow-presentation`)
+
+### UI
+- Added mobile hamburger menu (Sheet drawer) with navigation links
+- Footer compact layout: 3-column link grid on mobile instead of stacked
+- Social icons row below links on mobile, inline with brand on desktop
+- Normalized navbar icon sizes (theme toggle, avatar, hamburger all `h-8 w-8` targets, `h-5 w-5` icons)
+- Fixed avatar dropdown click behavior (`pointer-events-none` on Avatar, explicit trigger sizing)
+- Consistent `gap-2`/`gap-3` spacing across navbar items
+
 ## v0.5.4 — About Page, Footer & Lesson Page Polish
 
 ### UI

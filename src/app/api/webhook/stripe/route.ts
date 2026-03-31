@@ -87,8 +87,16 @@ export async function POST(request: Request) {
             .get();
           const existingData = existingEnrollment.data();
 
+          // Only consider existing enrollment for downgrade/upgrade logic if it
+          // matches the current Stripe mode. A test enrollment should never block
+          // or influence a live purchase (and vice versa).
+          const existingMatchesMode =
+            existingData &&
+            (existingData.livemode ?? false) === session.livemode;
+
           // Never downgrade lifetime → monthly (even if a stale session completes)
           if (
+            existingMatchesMode &&
             existingData?.status === "active" &&
             existingData?.planType === "lifetime" &&
             planType === "monthly"
@@ -104,9 +112,10 @@ export async function POST(request: Request) {
             break;
           }
 
-          // If user had an old subscription, cancel it before creating new enrollment
-          // (e.g. upgrading monthly → lifetime, or re-subscribing after cancel)
-          const oldSubId = existingData?.stripeSubscriptionId;
+          // If user had an old subscription in the same mode, cancel it before
+          // creating new enrollment (e.g. upgrading monthly → lifetime)
+          const oldSubId =
+            existingMatchesMode ? existingData?.stripeSubscriptionId : undefined;
           if (
             oldSubId &&
             oldSubId !== stripeSubscriptionId
@@ -127,7 +136,8 @@ export async function POST(request: Request) {
             session.amount_total ?? 0,
             session.currency ?? "usd",
             planType,
-            stripeSubscriptionId
+            stripeSubscriptionId,
+            session.livemode
           );
         }
         break;

@@ -2,6 +2,7 @@ import { adminDb } from "@/lib/firebase/admin";
 import { makeEnrollmentId } from "@/lib/constants";
 import type { Enrollment } from "@/lib/types";
 import { FieldValue } from "firebase-admin/firestore";
+import { stripeLiveMode } from "@/lib/stripe";
 
 export async function getEnrollment(
   uid: string,
@@ -12,6 +13,18 @@ export async function getEnrollment(
 
   if (!doc.exists) return null;
   const data = doc.data()!;
+
+  // Reject enrollments that don't match the current Stripe mode.
+  // Only enforce on purchase-based enrollments (gift/promo don't go through Stripe).
+  // Treat missing livemode as test (false) — safe default since legacy enrollments
+  // predate live Stripe setup.
+  if (data.source === "purchase") {
+    const enrollmentLivemode = data.livemode ?? false;
+    if (enrollmentLivemode !== stripeLiveMode) {
+      return null;
+    }
+  }
+
   return {
     ...data,
     enrolledAt: data.enrolledAt?.toDate?.()?.toISOString?.() ?? "",
@@ -28,7 +41,8 @@ export async function createEnrollmentWithPurchase(
   amountPaid: number,
   currency: string,
   planType: "lifetime" | "monthly" = "lifetime",
-  stripeSubscriptionId?: string
+  stripeSubscriptionId?: string,
+  livemode?: boolean
 ): Promise<boolean> {
   const enrollmentId = makeEnrollmentId(uid, courseId);
   const enrollmentRef = adminDb.collection("enrollments").doc(enrollmentId);
@@ -48,6 +62,16 @@ export async function createEnrollmentWithPurchase(
     // (but stripeCustomerId was still saved above)
     if (existingData?.stripeSessionId === stripeSessionId) return false;
 
+    // Never let a test-mode enrollment overwrite a live-mode enrollment.
+    // The reverse (live overwriting test) is fine — it means a real purchase is replacing test data.
+    if (
+      existingData &&
+      existingData.livemode === true &&
+      !livemode
+    ) {
+      return false;
+    }
+
     // If enrollment exists (e.g. user re-purchasing after cancel, or upgrading),
     // we overwrite it with the new plan
     const enrollmentData: Record<string, unknown> = {
@@ -59,6 +83,7 @@ export async function createEnrollmentWithPurchase(
       source: "purchase",
       planType,
       cancelAtPeriodEnd: false,
+      livemode: livemode ?? false,
     };
 
     if (stripeSubscriptionId) {
