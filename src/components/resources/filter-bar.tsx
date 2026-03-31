@@ -45,24 +45,26 @@ export function FilterBar() {
   };
 
   return (
-    <div className="flex flex-col items-center gap-3">
-      {/* Categories — wide row */}
-      <div className="flex flex-wrap justify-center gap-2">
-        <FilterPill
-          label="All Categories"
-          active={activeTag === ""}
-          onClick={() => updateFilters("tag", "")}
-        />
-        {TAGS.map((tag) => (
+    <div className="flex flex-col gap-3">
+      {/* Categories — horizontal scroll on mobile, wrap on desktop */}
+      <div className="relative">
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none md:flex-wrap md:justify-center md:overflow-x-visible md:pb-0">
           <FilterPill
-            key={tag}
-            label={tag}
-            active={activeTag === tag}
-            onClick={() =>
-              updateFilters("tag", activeTag === tag ? "" : tag)
-            }
+            label="All Categories"
+            active={activeTag === ""}
+            onClick={() => updateFilters("tag", "")}
           />
-        ))}
+          {TAGS.map((tag) => (
+            <FilterPill
+              key={tag}
+              label={tag}
+              active={activeTag === tag}
+              onClick={() =>
+                updateFilters("tag", activeTag === tag ? "" : tag)
+              }
+            />
+          ))}
+        </div>
       </div>
 
       {/* Sources — narrower row beneath */}
@@ -106,7 +108,7 @@ function FilterPill({
     <button
       onClick={onClick}
       className={cn(
-        "flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors",
+        "flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors",
         active
           ? "bg-primary text-primary-foreground shadow-sm"
           : "bg-card/60 text-muted-foreground backdrop-blur-sm hover:bg-card hover:text-foreground border border-border/40"
