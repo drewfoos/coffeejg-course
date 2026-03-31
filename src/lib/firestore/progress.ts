@@ -10,6 +10,7 @@ export async function getCourseProgress(
     .collection("progress")
     .where("userId", "==", uid)
     .where("courseId", "==", courseId)
+    .select("lessonId", "completed")
     .get();
 
   const progress = new Map<string, boolean>();

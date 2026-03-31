@@ -66,17 +66,17 @@ const externalLinks = [
 
 export function Footer() {
   return (
-    <footer className="relative border-t border-border/50 bg-card/30 pt-16 pb-8 overflow-hidden">
+    <footer className="relative border-t border-border/50 bg-card/30 pt-10 pb-6 overflow-hidden">
       {/* Subtle purple glow */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] via-transparent to-primary/[0.03]" />
       </div>
 
       <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-16">
-        <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div>
-            <div className="mb-6 flex items-center gap-3">
+            <div className="mb-4 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-pink-500 text-primary-foreground shadow-lg">
                 <Coffee className="h-5 w-5" />
               </div>
@@ -177,12 +177,8 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Bottom bar */}
-        <div className="mt-12 border-t border-border/50 pt-6 text-center">
-          <p className="text-xs text-muted-foreground">
-            &copy; {new Date().getFullYear()} CoffeeJG. All rights reserved.
-          </p>
-        </div>
+        {/* Bottom spacer */}
+        <div className="mt-12" />
       </div>
     </footer>
   );

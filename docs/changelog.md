@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.5.4 — About Page, Footer & Lesson Page Polish
+
+### UI
+- Redesigned about page socials section with actual SVG brand logos (Twitch, YouTube, TikTok, X, Discord, Linktree)
+- Brand-colored hover states on social links (Twitch purple, YouTube red, Discord blurple, Linktree green)
+- Unified about page section widths and grid layout
+- Removed copyright bar from footer, reduced footer height and spacing
+
+### Performance
+- Video player iframe uses `loading="lazy"` for deferred loading
+- Progress query uses Firestore `.select()` to fetch only needed fields
+
 ## v0.5.3 — Favorites Page Redesign
 
 ### UI
