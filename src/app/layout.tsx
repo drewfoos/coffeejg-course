@@ -38,7 +38,8 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${fredoka.variable} ${quicksand.variable} h-full antialiased`}
+      className={`dark ${geistSans.variable} ${geistMono.variable} ${fredoka.variable} ${quicksand.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col">
         <AuthProvider>

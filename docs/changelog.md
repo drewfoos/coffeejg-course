@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.5.1 — Dark Mode Default
+
+### UI
+- Default theme switched to dark mode (SSR renders with `dark` class, no flash of light)
+- First-time visitors see dark mode; user preference persisted in localStorage
+- Light mode still accessible via theme toggle
+
 ## v0.5.0 — Subscription Management, Admin Users & Payment Hardening
 
 ### Subscription System

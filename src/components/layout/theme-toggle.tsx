@@ -12,7 +12,7 @@ function getSnapshot() {
 }
 
 function getServerSnapshot() {
-  return false;
+  return true;
 }
 
 export function ThemeToggle() {
@@ -20,10 +20,13 @@ export function ThemeToggle() {
 
   useEffect(() => {
     const stored = localStorage.getItem("theme");
-    if (stored === "dark" || (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+    if (stored === "light") {
+      document.documentElement.classList.remove("dark");
+    } else {
+      // Default to dark mode (unless user explicitly chose light)
       document.documentElement.classList.add("dark");
-      window.dispatchEvent(new Event("theme-change"));
     }
+    window.dispatchEvent(new Event("theme-change"));
   }, []);
 
   const toggle = () => {
