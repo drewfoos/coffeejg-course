@@ -38,18 +38,20 @@ export default async function SettingsPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  // Get enrollment
-  const enrollmentSnap = await adminDb
-    .collection("enrollments")
-    .where("userId", "==", user.uid)
-    .where("status", "==", "active")
-    .limit(1)
-    .get();
+  // Parallelize all independent Firestore queries
+  const [enrollmentSnap, userDoc] = await Promise.all([
+    adminDb
+      .collection("enrollments")
+      .where("userId", "==", user.uid)
+      .where("status", "==", "active")
+      .limit(1)
+      .get(),
+    adminDb.collection("users").doc(user.uid).get(),
+  ]);
   const hasEnrollment = !enrollmentSnap.empty;
   const enrollment = hasEnrollment ? enrollmentSnap.docs[0].data() : null;
 
-  // Get Stripe customer ID (with fallback to purchase records)
-  const userDoc = await adminDb.collection("users").doc(user.uid).get();
+  // Resolve Stripe customer ID (with fallback to purchase records)
   let stripeCustomerId = userDoc.data()?.stripeCustomerId ?? null;
   if (!stripeCustomerId) {
     const purchaseSnap = await adminDb
@@ -59,7 +61,6 @@ export default async function SettingsPage() {
       .get();
     if (!purchaseSnap.empty) {
       stripeCustomerId = purchaseSnap.docs[0].data()?.stripeCustomerId ?? null;
-      // Backfill user doc
       if (stripeCustomerId) {
         await adminDb
           .collection("users")

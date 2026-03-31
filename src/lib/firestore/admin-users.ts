@@ -22,21 +22,22 @@ export async function getUsers(
   const listResult = await adminAuth.listUsers(limit, pageToken || undefined);
   const hasMore = !!listResult.pageToken;
 
-  const users: AdminUser[] = await Promise.all(
-    listResult.users.map(async (authUser) => {
-      // Try to get Firestore doc for extra fields
-      const doc = await adminDb.collection("users").doc(authUser.uid).get();
-      const data = doc.data();
-      return {
-        uid: authUser.uid,
-        displayName: authUser.displayName ?? data?.displayName ?? "",
-        email: authUser.email ?? data?.email ?? "",
-        authProvider: data?.authProvider ?? (authUser.providerData[0]?.providerId === "google.com" ? "google" : "email"),
-        stripeCustomerId: data?.stripeCustomerId ?? null,
-        createdAt: authUser.metadata.creationTime ?? data?.createdAt?.toDate?.()?.toISOString?.() ?? "",
-      };
-    })
-  );
+  // Batch-fetch all Firestore user docs in a single round-trip
+  const userRefs = listResult.users.map((u) => adminDb.collection("users").doc(u.uid));
+  const userDocs = userRefs.length > 0 ? await adminDb.getAll(...userRefs) : [];
+  const userDataMap = new Map(userDocs.map((doc) => [doc.id, doc.data()]));
+
+  const users: AdminUser[] = listResult.users.map((authUser) => {
+    const data = userDataMap.get(authUser.uid);
+    return {
+      uid: authUser.uid,
+      displayName: authUser.displayName ?? data?.displayName ?? "",
+      email: authUser.email ?? data?.email ?? "",
+      authProvider: data?.authProvider ?? (authUser.providerData[0]?.providerId === "google.com" ? "google" : "email"),
+      stripeCustomerId: data?.stripeCustomerId ?? null,
+      createdAt: authUser.metadata.creationTime ?? data?.createdAt?.toDate?.()?.toISOString?.() ?? "",
+    };
+  });
 
   return { users, hasMore, nextPageToken: listResult.pageToken };
 }
@@ -63,16 +64,20 @@ export async function searchUsers(query: string): Promise<AdminUser[]> {
   // If exact lookups didn't find anything, list all and filter
   if (results.length === 0) {
     const listResult = await adminAuth.listUsers(1000);
-    for (const authUser of listResult.users) {
-      if (
-        (authUser.email?.toLowerCase().includes(lower)) ||
-        (authUser.displayName?.toLowerCase().includes(lower)) ||
-        authUser.uid.toLowerCase().includes(lower)
-      ) {
-        results.push(await authUserToAdminUser(authUser));
-      }
-      if (results.length >= 50) break;
-    }
+    const matches = listResult.users
+      .filter(
+        (authUser) =>
+          authUser.email?.toLowerCase().includes(lower) ||
+          authUser.displayName?.toLowerCase().includes(lower) ||
+          authUser.uid.toLowerCase().includes(lower)
+      )
+      .slice(0, 50);
+
+    // Parallelize Firestore enrichment for all matches
+    const enriched = await Promise.all(
+      matches.map((authUser) => authUserToAdminUser(authUser))
+    );
+    results.push(...enriched);
   }
 
   return results;

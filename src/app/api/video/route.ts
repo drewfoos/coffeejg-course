@@ -62,5 +62,10 @@ export async function GET(request: NextRequest) {
     ? `https://www.youtube.com/embed/${lesson.vimeoVideoId}`
     : `https://player.vimeo.com/video/${lesson.vimeoVideoId}?dnt=1`;
 
-  return NextResponse.json({ embedUrl }, { headers: CORS_HEADERS });
+  return NextResponse.json({ embedUrl }, {
+    headers: {
+      ...CORS_HEADERS,
+      "Cache-Control": "private, max-age=3600",
+    },
+  });
 }

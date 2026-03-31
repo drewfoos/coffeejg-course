@@ -77,6 +77,18 @@ export async function getAssets(
   return { assets, totalCount, page: safePage, totalPages };
 }
 
+/** Lightweight query that only returns image URLs (for marquee backgrounds, etc.) */
+export async function getAssetImageUrls(limit: number = 50): Promise<string[]> {
+  const snapshot = await adminDb
+    .collection("assets")
+    .select("imageUrl")
+    .limit(limit)
+    .get();
+  return snapshot.docs
+    .map((doc) => (doc.data() as { imageUrl?: string }).imageUrl)
+    .filter((url): url is string => !!url);
+}
+
 export async function getAssetsByIds(ids: string[]): Promise<AssetWithId[]> {
   if (ids.length === 0) return [];
 
