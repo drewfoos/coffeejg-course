@@ -27,12 +27,21 @@ export function AssetCard({ asset, isFavorited }: AssetCardProps) {
       >
         {/* Image */}
         <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={asset.imageUrl}
-            alt={asset.title}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-          />
+          {asset.imageUrl ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={asset.imageUrl}
+              alt={asset.title}
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          ) : (
+            <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-primary/[0.08] via-muted to-primary/[0.04]">
+              <svg className="h-8 w-8 text-primary/25" fill="none" viewBox="0 0 24 24" strokeWidth={1.2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
+              </svg>
+              <span className="max-w-[80%] truncate text-xs font-medium text-muted-foreground/40">{asset.source}</span>
+            </div>
+          )}
           <div className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/10" />
           {/* Free badge */}
           {asset.free && (
@@ -56,51 +65,51 @@ export function AssetCard({ asset, isFavorited }: AssetCardProps) {
         </div>
 
         {/* Info */}
-        <div className="flex flex-1 flex-col p-3.5">
+        <div className="flex flex-1 flex-col p-4">
           {/* Title */}
           <h3 className="line-clamp-1 text-sm font-semibold">{asset.title}</h3>
           {/* Artist */}
-          <p className="mt-0.5 line-clamp-1 text-[13px] text-muted-foreground">
+          <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">
             {asset.artistName}
           </p>
-          {/* Description — fixed 2-line height */}
-          <p className="mt-1.5 line-clamp-2 h-[calc(2*1.625*12px)] text-[12px] leading-relaxed text-muted-foreground/80">
+          {/* Description */}
+          <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
             {asset.description || "\u00A0"}
           </p>
 
           {/* Bottom section — always at card bottom */}
           <div className="mt-auto flex flex-col gap-3 pt-3">
             {/* Tags */}
-            <div className="flex items-center gap-1.5">
+            <div className="-ml-0.5 flex items-center gap-1.5">
               {visibleTags.map((tag) => (
                 <span
                   key={tag}
-                  className="shrink-0 truncate rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground"
+                  className="shrink-0 rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground"
                 >
                   {tag}
                 </span>
               ))}
               {hiddenTags.length > 0 && (
                 <span
-                  className="relative shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground [&:hover>span]:visible"
+                  className="relative shrink-0 rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground [&:hover>span]:visible"
                 >
                   +{hiddenTags.length}
-                  <span className="invisible absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-border bg-popover px-3 py-2 text-[11px] font-medium text-popover-foreground shadow-lg">
+                  <span className="invisible absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-border bg-popover px-3 py-2 text-xs font-medium text-popover-foreground shadow-lg">
                     {hiddenTags.join(", ")}
                   </span>
                 </span>
               )}
             </div>
 
-            {/* Visit Creator */}
+            {/* View on source */}
             <a
               href={asset.externalUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-primary/10 text-[13px] font-medium text-primary transition-colors hover:bg-primary/20"
+              className="flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-primary/10 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
             >
-              Visit Creator
+              View on {asset.source}
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
               </svg>

@@ -16,7 +16,7 @@ export function SearchBar() {
     } else {
       params.delete("q");
     }
-    params.delete("cursor");
+    params.delete("page");
     router.push(`/resources?${params.toString()}`);
   };
 
@@ -24,7 +24,7 @@ export function SearchBar() {
     setQuery("");
     const params = new URLSearchParams(searchParams.toString());
     params.delete("q");
-    params.delete("cursor");
+    params.delete("page");
     router.push(`/resources?${params.toString()}`);
   };
 

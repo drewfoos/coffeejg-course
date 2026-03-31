@@ -19,7 +19,7 @@ export default function AuthLayout({
         <div className="relative z-10 flex flex-1 flex-col justify-center px-12 xl:px-16">
           <Link href="/" className="mb-10 flex items-center gap-3">
             <Image
-              src="/logo-coffee-nobg.svg"
+              src="/images/branding/logo-coffee-nobg.svg"
               alt="CoffeeJG"
               width={44}
               height={44}
@@ -77,7 +77,7 @@ export default function AuthLayout({
           className="mb-8 flex items-center gap-2.5 lg:hidden"
         >
           <Image
-            src="/logo-coffee-nobg.svg"
+            src="/images/branding/logo-coffee-nobg.svg"
             alt="CoffeeJG"
             width={36}
             height={36}

@@ -15,7 +15,7 @@ export async function Navbar() {
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2">
             <Image
-              src="/logo-coffee-nobg.svg"
+              src="/images/branding/logo-coffee-nobg.svg"
               alt="CoffeeJG"
               width={36}
               height={36}
@@ -25,16 +25,22 @@ export async function Navbar() {
           </Link>
           <nav className="hidden items-center gap-6 sm:flex">
             <Link
-              href="/courses/3d-vtubing-with-warudo"
+              href="/courses"
               className="text-sm text-foreground transition-colors hover:text-primary"
             >
-              Course
+              Courses
             </Link>
             <Link
               href="/resources"
               className="text-sm text-foreground transition-colors hover:text-primary"
             >
               Resources
+            </Link>
+            <Link
+              href="/about"
+              className="text-sm text-foreground transition-colors hover:text-primary"
+            >
+              About
             </Link>
           </nav>
         </div>

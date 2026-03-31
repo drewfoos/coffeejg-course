@@ -6,18 +6,26 @@ import { SourceIcon } from "./source-icon";
 
 const TAGS = [
   "2D",
+  "3D",
+  "Overlays & Alerts",
   "Emotes/Stickers/Badges",
+  "Character Assets",
+  "Backgrounds",
+  "Panels & Banners",
   "Clothing/Accessories",
   "Props",
-  "Panels & Banners",
-  "Backgrounds",
-  "Assets",
-  "Holiday",
-  "Easter",
+  "Live2D/3D/PNGtuber Models",
+  "Transition Screens",
+  "Debut Assets",
+  "Streaming",
   "Twitch",
+  "Holiday",
+  "VRoid",
+  "VRM",
+  "VRChat",
 ];
 
-const SOURCES = ["Ko-fi", "Booth", "Gumroad", "Free", "itch.io", "GitHub", "Other"];
+const SOURCES = ["Ko-fi", "Booth", "VGen", "Gumroad"];
 
 export function FilterBar() {
   const router = useRouter();
@@ -32,7 +40,7 @@ export function FilterBar() {
     } else {
       params.delete(key);
     }
-    params.delete("cursor");
+    params.delete("page");
     router.push(`/resources?${params.toString()}`);
   };
 

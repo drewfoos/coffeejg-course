@@ -3,14 +3,38 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import Image from "next/image";
+import { VrmViewer } from "@/components/vrm-viewer";
+import { WavePath } from "@/components/ui/wave-path";
+import ThreeDMarquee from "@/components/ui/3d-marquee";
+import { Testimonials } from "@/components/testimonials";
+import { CtaSection } from "@/components/cta-section";
+import { getAllCourses } from "@/lib/firestore/courses";
+import { getLessons } from "@/lib/firestore/lessons";
+import { getAssets } from "@/lib/firestore/assets";
 
-export default function Home() {
+export default async function Home() {
+  const [courses, { assets }] = await Promise.all([
+    getAllCourses(),
+    getAssets({}),
+  ]);
+
+  const coursesWithMeta = await Promise.all(
+    courses.map(async (course) => {
+      const lessons = await getLessons(course.id);
+      return { ...course, lessonCount: lessons.length };
+    })
+  );
+
+  const resourceImages = assets
+    .map((a) => a.imageUrl)
+    .filter(Boolean);
   return (
     <main>
       {/* Hero */}
-      <section className="relative min-h-[80vh] flex items-center overflow-hidden">
+      <section className="relative flex flex-col overflow-hidden lg:min-h-[80vh] lg:justify-center">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-pink-500/5" />
-        <div className="relative mx-auto flex w-full max-w-7xl items-center justify-between gap-16 px-8 py-20 lg:px-16">
+        <div className="relative mx-auto flex w-full max-w-7xl items-center justify-between gap-16 px-6 py-12 sm:px-8 lg:px-16 lg:py-20">
           {/* Left: Text */}
           <div className="max-w-xl flex-1">
             <Badge variant="secondary" className="mb-6">
@@ -28,14 +52,14 @@ export default function Home() {
               professional 3D VTuber. From first setup to going live.
             </p>
             <div className="mt-10 flex gap-4">
-              <Link href="/pro">
+              <Link href="/courses/3d-vtubing-with-warudo">
                 <Button size="lg" className="px-8">
                   Get Started
                 </Button>
               </Link>
-              <Link href="/courses/3d-vtubing-with-warudo">
+              <Link href="/courses">
                 <Button size="lg" variant="outline" className="px-8">
-                  Browse Course
+                  Browse Courses
                 </Button>
               </Link>
             </div>
@@ -58,126 +82,140 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right: Image */}
+          {/* Right: 3D model on desktop only */}
           <div className="hidden flex-shrink-0 lg:block">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/coffeejg-figure-compressed.png"
-              alt="CoffeeJG VTuber"
-              className="h-[500px] w-auto drop-shadow-2xl"
-              style={{
-                maskImage:
-                  "linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)",
-                WebkitMaskImage:
-                  "linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)",
-              }}
+            <VrmViewer
+              url="/models/3859814441197244330.vrm"
+              className="h-[550px] w-[400px]"
+              showStage
             />
           </div>
         </div>
+
+        {/* Mobile: character image centered below text */}
+        <div className="flex justify-center pb-8 lg:hidden">
+          <Image
+            src="/images/hero/coffeejg-figure-compressed.png"
+            alt="CoffeeJG VTuber character"
+            width={280}
+            height={380}
+            className="h-[320px] w-auto object-contain sm:h-[380px]"
+            priority
+          />
+        </div>
       </section>
 
-      {/* Course Section */}
-      <section className="border-t border-border/50 bg-card/50 py-20">
+      {/* Wave divider */}
+      <div className="flex justify-center py-4">
+        <WavePath />
+      </div>
+
+      {/* Courses Section */}
+      <section className="bg-card/50 py-20">
         <div className="mx-auto max-w-7xl px-8 lg:px-16">
           <div className="mb-10 text-center">
-            <h2 className="text-3xl font-bold">Featured Course</h2>
+            <h2 className="text-3xl font-bold">
+              {coursesWithMeta.length === 1 ? "Featured Course" : "Courses"}
+            </h2>
             <p className="mt-3 text-lg text-muted-foreground">
               Everything you need to start your VTubing journey
             </p>
           </div>
 
-          <Link href="/courses/3d-vtubing-with-warudo" className="block">
-            <Card className="mx-auto max-w-4xl overflow-hidden transition-all hover:shadow-lg">
-              <div className="grid md:grid-cols-[1.2fr_1fr]">
-                <div className="aspect-video bg-muted md:aspect-auto">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="https://placehold.co/800x450/1a1a2e/e94560?text=3D+VTubing+with+Warudo"
-                    alt="3D VTubing with Warudo"
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                <CardContent className="flex flex-col justify-center p-8">
-                  <Badge variant="secondary" className="w-fit mb-3">
-                    10 Lessons
-                  </Badge>
-                  <h3 className="text-2xl font-bold">
-                    3D VTubing with Warudo: Complete Guide
-                  </h3>
-                  <p className="mt-3 text-muted-foreground leading-relaxed">
-                    From setting up Warudo to going live with your first stream.
-                    Covers motion tracking, scene design, expressions, and OBS
-                    integration.
-                  </p>
-                  <ul className="mt-5 space-y-2 text-sm text-muted-foreground">
-                    <li className="flex items-center gap-2">
-                      <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                      </svg>
-                      2 free preview lessons
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                      </svg>
-                      Progress tracking
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                      </svg>
-                      Lifetime access
-                    </li>
-                  </ul>
-                </CardContent>
-              </div>
-            </Card>
-          </Link>
+          <div className={
+            coursesWithMeta.length === 1
+              ? "mx-auto max-w-2xl"
+              : coursesWithMeta.length === 2
+                ? "grid gap-6 sm:grid-cols-2 mx-auto max-w-4xl"
+                : "grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+          }>
+            {coursesWithMeta.map((course) => (
+              <Link key={course.id} href={`/courses/${course.id}`} className="block">
+                <Card className="overflow-hidden transition-all hover:shadow-lg h-full">
+                  <div className="aspect-video bg-muted">
+                    {course.thumbnailUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={course.thumbnailUrl}
+                        alt={course.title}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/20 to-pink-500/20">
+                        <span className="text-lg font-medium text-muted-foreground">
+                          {course.title}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <CardContent className="p-6">
+                    <div className="mb-3 flex items-center gap-2">
+                      <Badge variant="secondary">
+                        {course.lessonCount} {course.lessonCount === 1 ? "Lesson" : "Lessons"}
+                      </Badge>
+                      {course.isFree && (
+                        <Badge variant="outline" className="border-primary text-primary">
+                          Free
+                        </Badge>
+                      )}
+                    </div>
+                    <h3 className="text-xl font-bold">{course.title}</h3>
+                    <p className="mt-2 line-clamp-2 text-sm text-muted-foreground leading-relaxed">
+                      {course.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+
+          {coursesWithMeta.length > 3 && (
+            <div className="mt-8 text-center">
+              <Link href="/courses">
+                <Button variant="outline" size="lg" className="px-8">
+                  View All Courses
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 
       {/* Resource Hub CTA */}
-      <section className="py-20">
-        <div className="mx-auto max-w-7xl px-8 lg:px-16">
-          <div className="flex flex-col items-center gap-8 md:flex-row md:justify-between">
-            <div className="max-w-lg">
-              <h2 className="text-3xl font-bold">Free Resource Hub</h2>
+      <section className="relative overflow-hidden py-20">
+        <div className="absolute inset-0">
+          <ThreeDMarquee images={resourceImages} className="h-full" />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-background/70 to-background" />
+        <div className="relative mx-auto max-w-7xl px-8 lg:px-16">
+          <div className="mx-auto max-w-2xl text-center">
+            <div className="rounded-2xl bg-background/80 px-8 py-12 backdrop-blur-sm">
+              <Badge variant="outline" className="mb-4 border-primary/30 text-primary">
+                100% Free
+              </Badge>
+              <h2 className="text-3xl font-bold">Resource Hub</h2>
               <p className="mt-3 text-lg text-muted-foreground leading-relaxed">
                 Browse free VTuber assets, tools, and references. Filter by
                 category, save your favorites, and find everything you need in
                 one place.
               </p>
+              <div className="mt-8">
+                <Link href="/resources">
+                  <Button size="lg" className="px-8">
+                    Browse Resources
+                  </Button>
+                </Link>
+              </div>
             </div>
-            <Link href="/resources">
-              <Button size="lg" variant="outline" className="px-8">
-                Browse Resources
-              </Button>
-            </Link>
           </div>
         </div>
       </section>
 
+      {/* Testimonials */}
+      <Testimonials />
+
       {/* Final CTA */}
-      <section className="border-t border-border/50 bg-gradient-to-br from-primary/5 via-transparent to-pink-500/5 py-20">
-        <div className="mx-auto max-w-2xl text-center px-4">
-          <h2 className="text-3xl font-bold">Ready to start VTubing?</h2>
-          <p className="mt-4 text-lg text-muted-foreground">
-            Get started with our complete course and free resource library.
-          </p>
-          <div className="mt-8 flex justify-center gap-4">
-            <Link href="/pro">
-              <Button size="lg" className="px-8">
-                Get Pro Access
-              </Button>
-            </Link>
-            <Link href="/courses/3d-vtubing-with-warudo">
-              <Button size="lg" variant="outline" className="px-8">
-                View Course
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
+      <CtaSection />
     </main>
   );
 }

@@ -40,7 +40,18 @@ interface AssetData {
   free: boolean;
 }
 
+async function clearAssets() {
+  console.log("Clearing existing assets...");
+  const snapshot = await db.collection("assets").get();
+  const batch = db.batch();
+  snapshot.docs.forEach((doc) => batch.delete(doc.ref));
+  await batch.commit();
+  console.log(`  ✓ Deleted ${snapshot.size} existing assets.\n`);
+}
+
 async function seedAssets() {
+  await clearAssets();
+
   const raw = readFileSync(resolve(__dirname, "../data/assets.json"), "utf-8");
   const assets: AssetData[] = JSON.parse(raw);
 

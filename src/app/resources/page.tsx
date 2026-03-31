@@ -12,10 +12,11 @@ import Link from "next/link";
 export default async function ResourcesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tag?: string; source?: string; cursor?: string; q?: string }>;
+  searchParams: Promise<{ tag?: string; source?: string; page?: string; q?: string }>;
 }) {
-  const { tag, source, cursor, q } = await searchParams;
-  const { assets, nextCursor } = await getAssets({ tag, source, cursor, q });
+  const { tag, source, page: pageStr, q } = await searchParams;
+  const page = Math.max(1, Number(pageStr) || 1);
+  const { assets, totalCount, totalPages } = await getAssets({ tag, source, page, q });
 
   const user = await getCurrentUser();
   const favoriteIds = user
@@ -39,6 +40,7 @@ export default async function ResourcesPage({
         <div className="absolute left-1/2 top-0 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-primary/12 blur-[140px]" />
         <div className="absolute -left-24 top-1/3 h-64 w-64 rounded-full bg-pink-500/[0.08] blur-[100px]" />
         <div className="absolute -right-24 top-1/4 h-64 w-64 rounded-full bg-fuchsia-500/[0.07] blur-[100px]" />
+
 
         {/* Interactive particles */}
         <div className="absolute inset-0">
@@ -107,9 +109,9 @@ export default async function ResourcesPage({
         {/* Results toolbar */}
         <div className="flex items-center justify-between pb-4">
           <p className="text-sm text-muted-foreground">
-            {assets.length === 0
+            {totalCount === 0
               ? "No resources found"
-              : `${assets.length} resource${assets.length !== 1 ? "s" : ""}`}
+              : `${totalCount} resource${totalCount !== 1 ? "s" : ""}`}
           </p>
           {hasFilters && (
             <Link
@@ -146,7 +148,7 @@ export default async function ResourcesPage({
 
         <div className="pb-10">
           <Suspense>
-            <PaginationControls nextCursor={nextCursor} />
+            <PaginationControls currentPage={page} totalPages={totalPages} />
           </Suspense>
         </div>
       </div>

@@ -1,44 +1,76 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 interface PaginationControlsProps {
-  nextCursor: string | null;
+  currentPage: number;
+  totalPages: number;
 }
 
-export function PaginationControls({ nextCursor }: PaginationControlsProps) {
-  const router = useRouter();
+function buildHref(searchParams: URLSearchParams, page: number) {
+  const params = new URLSearchParams(searchParams.toString());
+  if (page > 1) {
+    params.set("page", String(page));
+  } else {
+    params.delete("page");
+  }
+  return `/resources?${params.toString()}`;
+}
+
+/** Returns page numbers to render, with -1 representing ellipsis. */
+function getPageNumbers(current: number, total: number): number[] {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+
+  const pages: number[] = [1];
+
+  if (current > 3) {
+    pages.push(-1);
+  }
+
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+
+  for (let i = start; i <= end; i++) {
+    pages.push(i);
+  }
+
+  if (current < total - 2) {
+    pages.push(-1);
+  }
+
+  pages.push(total);
+
+  return pages;
+}
+
+export function PaginationControls({
+  currentPage,
+  totalPages,
+}: PaginationControlsProps) {
   const searchParams = useSearchParams();
-  const hasCursor = searchParams.has("cursor");
-  const currentPage = Number(searchParams.get("page") ?? "1");
 
-  const navigate = (cursor: string | null, page: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (cursor) {
-      params.set("cursor", cursor);
-    } else {
-      params.delete("cursor");
-    }
-    if (page > 1) {
-      params.set("page", String(page));
-    } else {
-      params.delete("page");
-    }
-    router.push(`/resources?${params.toString()}`);
-  };
+  if (totalPages <= 1) return null;
 
-  if (!hasCursor && !nextCursor) return null;
+  const pages = getPageNumbers(currentPage, totalPages);
+  const hasPrev = currentPage > 1;
+  const hasNext = currentPage < totalPages;
 
   return (
-    <div className="flex items-center justify-center gap-2 pt-10 pb-4">
+    <nav
+      aria-label="Pagination"
+      className="flex items-center justify-center gap-1.5 pt-10 pb-4"
+    >
       {/* Previous */}
-      <button
-        onClick={() => router.back()}
-        disabled={!hasCursor}
+      <Link
+        href={buildHref(searchParams, currentPage - 1)}
+        aria-label="Previous page"
         className={cn(
-          "flex h-9 items-center gap-1.5 rounded-lg border px-3.5 text-sm font-medium transition-colors",
-          hasCursor
+          "flex h-9 w-9 items-center justify-center rounded-lg border text-sm transition-colors",
+          hasPrev
             ? "border-border/50 text-muted-foreground hover:bg-accent hover:text-foreground"
             : "pointer-events-none border-border/30 text-muted-foreground/30"
         )}
@@ -46,40 +78,50 @@ export function PaginationControls({ nextCursor }: PaginationControlsProps) {
         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
         </svg>
-        Prev
-      </button>
+      </Link>
 
-      {/* Page number */}
-      <span className="flex h-9 min-w-9 items-center justify-center rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground">
-        {currentPage}
-      </span>
-
-      {/* Next page indicator */}
-      {nextCursor && (
-        <button
-          onClick={() => navigate(nextCursor, currentPage + 1)}
-          className="flex h-9 min-w-9 items-center justify-center rounded-lg border border-border/50 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-        >
-          {currentPage + 1}
-        </button>
+      {/* Page numbers */}
+      {pages.map((p, i) =>
+        p === -1 ? (
+          <span
+            key={`ellipsis-${i}`}
+            className="flex h-9 w-9 items-center justify-center text-sm text-muted-foreground/50"
+          >
+            &hellip;
+          </span>
+        ) : (
+          <Link
+            key={p}
+            href={buildHref(searchParams, p)}
+            aria-label={`Page ${p}`}
+            aria-current={p === currentPage ? "page" : undefined}
+            className={cn(
+              "flex h-9 min-w-9 items-center justify-center rounded-lg px-2 text-sm font-medium transition-colors",
+              p === currentPage
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "border border-border/50 text-muted-foreground hover:bg-accent hover:text-foreground"
+            )}
+          >
+            {p}
+          </Link>
+        )
       )}
 
       {/* Next */}
-      <button
-        onClick={() => nextCursor && navigate(nextCursor, currentPage + 1)}
-        disabled={!nextCursor}
+      <Link
+        href={buildHref(searchParams, currentPage + 1)}
+        aria-label="Next page"
         className={cn(
-          "flex h-9 items-center gap-1.5 rounded-lg border px-3.5 text-sm font-medium transition-colors",
-          nextCursor
+          "flex h-9 w-9 items-center justify-center rounded-lg border text-sm transition-colors",
+          hasNext
             ? "border-border/50 text-muted-foreground hover:bg-accent hover:text-foreground"
             : "pointer-events-none border-border/30 text-muted-foreground/30"
         )}
       >
-        Next
         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
         </svg>
-      </button>
-    </div>
+      </Link>
+    </nav>
   );
 }

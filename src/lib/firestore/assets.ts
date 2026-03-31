@@ -2,7 +2,6 @@ import { adminDb } from "@/lib/firebase/admin";
 import { PAGE_SIZE } from "@/lib/constants";
 import type { Asset } from "@/lib/types";
 import { serializeDoc } from "@/lib/types";
-import { Timestamp } from "firebase-admin/firestore";
 
 export interface AssetWithId extends Asset {
   id: string;
@@ -11,49 +10,43 @@ export interface AssetWithId extends Asset {
 interface GetAssetsOptions {
   tag?: string;
   source?: string;
-  cursor?: string;
+  page?: number;
   q?: string;
 }
 
 interface GetAssetsResult {
   assets: AssetWithId[];
-  nextCursor: string | null;
+  totalCount: number;
+  page: number;
+  totalPages: number;
 }
 
 export async function getAssets(
   options: GetAssetsOptions
 ): Promise<GetAssetsResult> {
-  const { tag, source, cursor, q } = options;
+  const { tag, source, q, page = 1 } = options;
 
-  let query: FirebaseFirestore.Query = adminDb.collection("assets");
+  let baseQuery: FirebaseFirestore.Query = adminDb.collection("assets");
 
   if (tag) {
-    query = query.where("tags", "array-contains", tag);
+    baseQuery = baseQuery.where("tags", "array-contains", tag);
   }
 
   if (source) {
-    query = query.where("source", "==", source);
+    baseQuery = baseQuery.where("source", "==", source);
   }
 
-  query = query.orderBy("createdAt", "desc");
+  // Get total count for the filtered query
+  const countSnapshot = await baseQuery.count().get();
+  const totalCount = countSnapshot.data().count;
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const safePage = Math.max(1, Math.min(page, totalPages));
+  const offset = (safePage - 1) * PAGE_SIZE;
 
-  if (cursor) {
-    const cursorMs = Number(cursor);
-    if (!Number.isFinite(cursorMs) || cursorMs < 0) {
-      return { assets: [], nextCursor: null };
-    }
-    const cursorTimestamp = Timestamp.fromMillis(cursorMs);
-    query = query.startAfter(cursorTimestamp);
-  }
+  const query = baseQuery.orderBy("createdAt", "desc").offset(offset).limit(PAGE_SIZE);
+  const snapshot = await query.get();
 
-  // Fetch one extra to detect if there's a next page
-  const snapshot = await query.limit(PAGE_SIZE + 1).get();
-
-  const docs = snapshot.docs;
-  const hasNextPage = docs.length > PAGE_SIZE;
-  const pageDocs = hasNextPage ? docs.slice(0, PAGE_SIZE) : docs;
-
-  let assets: AssetWithId[] = pageDocs.map((doc) =>
+  let assets: AssetWithId[] = snapshot.docs.map((doc) =>
     serializeDoc({ id: doc.id, ...(doc.data() as Asset) })
   );
 
@@ -69,11 +62,7 @@ export async function getAssets(
     );
   }
 
-  const nextCursor = hasNextPage
-    ? pageDocs[pageDocs.length - 1].data().createdAt.toMillis().toString()
-    : null;
-
-  return { assets, nextCursor };
+  return { assets, totalCount, page: safePage, totalPages };
 }
 
 export async function getAssetsByIds(ids: string[]): Promise<AssetWithId[]> {
