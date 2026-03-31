@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.5.3 — Favorites Page Redesign
+
+### UI
+- Redesigned favorites page with hero section matching Resource Hub style
+- Warm red/pink gradient, glow orbs, and layered wave transition
+- Floating heart decorations with staggered CSS pulse animations
+- Improved empty state with heart icon badge and "Explore Resources" CTA
+- Fredoka + Quicksand typography consistent with Resource Hub
+
 ## v0.5.2 — Performance, Self-Hosted Assets & Resource Hub UX
 
 ### Performance
