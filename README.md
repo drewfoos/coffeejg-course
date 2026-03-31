@@ -39,7 +39,7 @@ Framework       Next.js 16 · App Router · Server Components · Server Actions
 Auth            Firebase Auth · Email/Password + Google · Session Cookies
 Database        Firestore · Firebase Admin SDK · Server-side only
 Payments        Stripe Checkout · One-time + Subscriptions · Webhook-driven
-Video           Vimeo · Domain-restricted embeds · Server-resolved URLs
+Video           Vimeo + YouTube · Plyr custom player · Server-resolved URLs
 Styling         Tailwind CSS · shadcn/ui · oklch color system
 Language        TypeScript · Strict mode
 Hosting         Vercel
@@ -82,7 +82,7 @@ This isn't a toy project. Payment security is treated seriously.
 | **Auth** | Firebase session cookies with server-side verification and revocation checks |
 | **Payments** | Stripe webhook signature verification, transactional event dedup, idempotent enrollment creation |
 | **Access** | Server-side only — enrollment doc existence = access. Firestore rules deny all client reads/writes |
-| **Video** | Vimeo IDs resolved server-side via `/api/video`. Never leaked to client or RSC payloads |
+| **Video** | Vimeo IDs resolved server-side via `/api/video`. Custom Plyr controls hide native chrome. Right-click disabled. Never leaked to client or RSC payloads |
 | **Headers** | HSTS, X-Frame-Options DENY, CSP permissions, no X-Powered-By |
 | **Input** | All user-supplied IDs validated against `^[a-zA-Z0-9_-]{1,128}$` before Firestore queries |
 | **Webhooks** | Transactional claim prevents concurrent duplicate processing. Failed events unclaimed for retry |
@@ -200,7 +200,7 @@ src/
     settings/               # Account + subscription management
   components/
     admin/                  # Admin UI (forms, buttons, search)
-    course/                 # Buy button, lesson sidebar
+    course/                 # Buy button, lesson sidebar, Plyr video player
     resources/              # Asset cards, filters, search
     settings/               # Cancel/resume subscription
     layout/                 # Navbar, footer
