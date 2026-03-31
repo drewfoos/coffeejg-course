@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.5.6 — Custom Branded Video Player (Plyr)
+
+### Video Player
+- Replaced raw iframe embed with Plyr-based custom video player
+- CoffeeJG purple branding on all controls via `--plyr-color-main` CSS variable
+- Custom controls: play/pause, progress bar, current time/duration, volume, fullscreen
+- Hides all native Vimeo/YouTube chrome (title, byline, recommendations)
+- Right-click disabled on player container
+- Vimeo: cookies disabled, title/byline/portrait hidden, DNT enabled
+- YouTube: no-cookie domain, modest branding, no related videos
+- Keyboard shortcuts via Plyr (space/k for play/pause, arrows for seek, m for mute, f for fullscreen)
+- Clean unmount on navigation — no "provider destroyed" errors
+
+### Dependencies
+- Added `plyr` for custom video player controls
+- Removed `@vimeo/player` (Plyr handles Vimeo embedding natively)
+- Removed custom player module (`src/components/course/player/` — 8 files)
+
 ## v0.5.5 — Stripe Livemode Enforcement, Mobile Nav & UI Polish
 
 ### Security
