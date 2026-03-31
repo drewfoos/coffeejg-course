@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { getCourse } from "@/lib/firestore/courses";
-import { getLessons } from "@/lib/firestore/lessons";
+import { getLessonSummaries } from "@/lib/firestore/lessons";
 
 export default async function CoursePage({
   params,
@@ -11,7 +11,7 @@ export default async function CoursePage({
 
   const [course, lessons] = await Promise.all([
     getCourse(courseId),
-    getLessons(courseId),
+    getLessonSummaries(courseId),
   ]);
 
   if (!course) notFound();

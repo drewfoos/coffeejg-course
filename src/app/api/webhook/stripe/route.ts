@@ -57,10 +57,6 @@ export async function POST(request: Request) {
       }
 
       try {
-        const planType =
-          (session.metadata?.planType as "lifetime" | "subscription") ??
-          (session.mode === "subscription" ? "subscription" : "lifetime");
-
         await createEnrollmentWithPurchase(
           firebaseUid,
           courseId,
@@ -69,7 +65,7 @@ export async function POST(request: Request) {
           (session.customer as string) ?? "",
           session.amount_total ?? 0,
           session.currency ?? "usd",
-          planType
+          "lifetime"
         );
       } catch (error) {
         console.error("Failed to create enrollment:", error);
@@ -79,10 +75,10 @@ export async function POST(request: Request) {
         );
       }
     }
-  }
 
-  // Mark event as processed
-  await eventRef.set({ processedAt: new Date().toISOString() });
+    // Mark event as processed only after successful handling
+    await eventRef.set({ processedAt: new Date().toISOString() });
+  }
 
   return NextResponse.json({ received: true }, { status: 200 });
 }

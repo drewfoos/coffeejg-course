@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth/get-current-user";
 import { getEnrollment } from "@/lib/firestore/enrollments";
 import { getLesson } from "@/lib/firestore/lessons";
 import { validateId } from "@/lib/validation";
+import { apiLimiter } from "@/lib/rate-limit";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
@@ -17,6 +18,11 @@ const CORS_HEADERS = {
  * GET /api/video?courseId=xxx&lessonId=yyy
  */
 export async function GET(request: NextRequest) {
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
+  const { success } = apiLimiter.limit(ip);
+  if (!success) {
+    return NextResponse.json({ error: "Too many requests." }, { status: 429, headers: CORS_HEADERS });
+  }
   const searchParams = request.nextUrl.searchParams;
   const courseId = searchParams.get("courseId");
   const lessonId = searchParams.get("lessonId");

@@ -7,39 +7,32 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Check, Video, BarChart3, RefreshCw } from "lucide-react";
 import Link from "next/link";
+import { stripe } from "@/lib/stripe";
 
 const COURSE_ID = "3d-vtubing-with-warudo";
 
-const PLANS = [
-  {
-    name: "Annual Access",
-    price: "$2.00",
-    period: "/ year",
-    description: "Full access for one year",
-    planType: "subscription" as const,
-    features: [
-      "All course lessons",
-      "Progress tracking",
-      "1 year of access",
-      "Future updates during your plan",
-    ],
-    popular: false,
-  },
-  {
-    name: "Lifetime Access",
-    price: "$5.00",
-    period: "one-time",
-    description: "Pay once, learn forever",
-    planType: "lifetime" as const,
-    features: [
-      "All course lessons",
-      "Progress tracking",
-      "Lifetime access — never expires",
-      "All future courses and updates",
-    ],
-    popular: true,
-  },
-];
+let cachedPrice: { label: string; expiresAt: number } | null = null;
+const PRICE_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+async function getPrice(): Promise<string> {
+  if (cachedPrice && Date.now() < cachedPrice.expiresAt) {
+    return cachedPrice.label;
+  }
+  const priceId = process.env.STRIPE_PRICE_ID;
+  if (!priceId) return "$5.00";
+  try {
+    const price = await stripe.prices.retrieve(priceId);
+    if (price.unit_amount == null) return "$5.00";
+    const amount = (price.unit_amount / 100).toFixed(2);
+    const currency = (price.currency ?? "usd").toUpperCase();
+    const symbol = currency === "USD" ? "$" : currency + " ";
+    const label = `${symbol}${amount}`;
+    cachedPrice = { label, expiresAt: Date.now() + PRICE_CACHE_TTL };
+    return label;
+  } catch {
+    return "$5.00";
+  }
+}
 
 const PERKS = [
   {
@@ -60,11 +53,28 @@ const PERKS = [
 ];
 
 export default async function ProPage() {
-  const user = await getCurrentUser();
+  const [user, priceLabel] = await Promise.all([
+    getCurrentUser(),
+    getPrice(),
+  ]);
   const enrollment = user
     ? await getEnrollment(user.uid, COURSE_ID)
     : null;
   const isEnrolled = enrollment?.status === "active";
+
+  const plan = {
+    name: "Lifetime Access",
+    price: priceLabel,
+    period: "one-time",
+    description: "Pay once, learn forever",
+    features: [
+      "All course lessons",
+      "Progress tracking",
+      "Lifetime access — never expires",
+      "All future courses and updates",
+    ],
+    popular: true,
+  };
 
   return (
     <main>
@@ -112,22 +122,11 @@ export default async function ProPage() {
             </Card>
           </div>
         ) : (
-          <div className="mx-auto max-w-3xl px-4">
-          <div className="grid gap-8 md:grid-cols-2">
-            {PLANS.map((plan) => (
-              <Card
-                key={plan.name}
-                className={`relative overflow-hidden transition-shadow ${
-                  plan.popular
-                    ? "border-primary shadow-lg shadow-primary/10"
-                    : "hover:shadow-md"
-                }`}
-              >
-                {plan.popular && (
-                  <div className="absolute top-0 right-0 rounded-bl-lg bg-gradient-to-r from-primary to-pink-500 px-3 py-1 text-xs font-semibold text-primary-foreground">
-                    BEST VALUE
-                  </div>
-                )}
+          <div className="mx-auto max-w-md px-4">
+              <Card className="relative overflow-hidden border-primary shadow-lg shadow-primary/10">
+                <div className="absolute top-0 right-0 rounded-bl-lg bg-gradient-to-r from-primary to-pink-500 px-3 py-1 text-xs font-semibold text-primary-foreground">
+                  BEST VALUE
+                </div>
                 <CardContent className="flex h-full flex-col p-8">
                   <div className="mb-6">
                     <h3 className="text-xl font-semibold">{plan.name}</h3>
@@ -147,8 +146,6 @@ export default async function ProPage() {
                     courseId={COURSE_ID}
                     price={plan.price}
                     label={`Get ${plan.name}`}
-                    variant={plan.popular ? "default" : "outline"}
-                    planType={plan.planType}
                   />
 
                   <Separator className="my-6" />
@@ -166,10 +163,8 @@ export default async function ProPage() {
                   </ul>
                 </CardContent>
               </Card>
-            ))}
-          </div>
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            Secure payment powered by Stripe. Cancel anytime.
+            Secure payment powered by Stripe.
           </p>
           </div>
         )}

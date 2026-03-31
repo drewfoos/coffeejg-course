@@ -1,17 +1,29 @@
 import { notFound } from "next/navigation";
 import { getCourse } from "@/lib/firestore/courses";
-import { getLesson } from "@/lib/firestore/lessons";
-import { getLessons } from "@/lib/firestore/lessons";
+import { getLesson, getLessonSummaries } from "@/lib/firestore/lessons";
 import { getEnrollment } from "@/lib/firestore/enrollments";
 import { getCourseProgress } from "@/lib/firestore/progress";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
+import dynamic from "next/dynamic";
 import { VideoPlayer } from "@/components/course/video-player";
 import { MarkCompleteButton } from "@/components/course/mark-complete-button";
 import { CourseSidebarWrapper } from "@/components/course/course-sidebar-wrapper";
 import { LessonRating } from "@/components/course/lesson-rating";
-import { PlateRenderer } from "@/components/course/plate-renderer";
 import { extractPlateHeadings } from "@/lib/plate-utils";
 import Link from "next/link";
+
+const PlateRenderer = dynamic(
+  () => import("@/components/course/plate-renderer").then((m) => m.PlateRenderer),
+  {
+    loading: () => (
+      <div className="space-y-3 animate-pulse">
+        <div className="h-4 w-3/4 rounded bg-muted" />
+        <div className="h-4 w-full rounded bg-muted" />
+        <div className="h-4 w-5/6 rounded bg-muted" />
+      </div>
+    ),
+  }
+);
 
 function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -29,11 +41,11 @@ export default async function LessonPage({
   const [course, lesson, lessons, user] = await Promise.all([
     getCourse(courseId),
     getLesson(courseId, lessonId),
-    getLessons(courseId),
+    getLessonSummaries(courseId),
     getCurrentUser(),
   ]);
 
-  if (!lesson) notFound();
+  if (!course || !lesson) notFound();
 
   let isEnrolled = false;
   let progressMap: Record<string, boolean> = {};
@@ -58,10 +70,7 @@ export default async function LessonPage({
   const isCompleted = progressMap[lessonId] ?? false;
   const completedCount = Object.values(progressMap).filter(Boolean).length;
 
-  // Strip sensitive fields (vimeoVideoId, description, topics) before sending to client
-  const sidebarLessons = lessons.map(({ id, title, order, durationSeconds, isFree, section }) => ({
-    id, title, order, durationSeconds, isFree, section,
-  }));
+  // getLessonSummaries already returns only sidebar-safe fields (no vimeoVideoId, blocks, etc.)
 
   const headings =
     lesson.blocks && lesson.blocks.length > 0
@@ -75,11 +84,11 @@ export default async function LessonPage({
     <div className="flex min-h-[calc(100vh-4rem)]">
       {/* Collapsible Sidebar */}
       <CourseSidebarWrapper
-        courseTitle={course?.title || "Course"}
+        courseTitle={course.title}
         completedCount={completedCount}
         totalCount={lessons.length}
         isEnrolled={isEnrolled}
-        lessons={sidebarLessons}
+        lessons={lessons}
         courseId={courseId}
         currentLessonId={lessonId}
         progressMap={progressMap}

@@ -56,7 +56,6 @@ function extractVimeoId(input: string): string {
 export async function createCourseAction(data: {
   title: string;
   description: string;
-  stripePriceId: string | null;
   isFree: boolean;
   thumbnailUrl: string;
 }) {
@@ -70,15 +69,7 @@ export async function createCourseAction(data: {
   if (!id) throw new Error("Could not generate a valid ID from this title. Try a different title.");
 
   const description = (data.description ?? "").trim();
-  const stripePriceId = (data.stripePriceId ?? "").trim();
   const thumbnailUrl = (data.thumbnailUrl ?? "").trim();
-
-  if (!data.isFree && !stripePriceId) {
-    throw new Error("Paid courses require a Stripe Price ID. Find this in your Stripe Dashboard under Products.");
-  }
-  if (stripePriceId && !stripePriceId.startsWith("price_")) {
-    throw new Error("Stripe Price ID should start with \"price_\". Check your Stripe Dashboard.");
-  }
 
   validateUrl(thumbnailUrl, "Thumbnail URL");
 
@@ -86,7 +77,6 @@ export async function createCourseAction(data: {
     title,
     slug: id,
     description,
-    stripePriceId,
     isFree: data.isFree,
     thumbnailUrl,
   };
@@ -102,7 +92,6 @@ export async function updateCourseAction(
   data: {
     title: string;
     description: string;
-    stripePriceId: string | null;
     isFree: boolean;
     thumbnailUrl: string;
   }
@@ -113,22 +102,13 @@ export async function updateCourseAction(
   if (!title) throw new Error("Course title is required.");
   if (title.length > 100) throw new Error("Course title must be under 100 characters.");
 
-  const stripePriceId = (data.stripePriceId ?? "").trim();
   const thumbnailUrl = (data.thumbnailUrl ?? "").trim();
-
-  if (!data.isFree && !stripePriceId) {
-    throw new Error("Paid courses require a Stripe Price ID.");
-  }
-  if (stripePriceId && !stripePriceId.startsWith("price_")) {
-    throw new Error("Stripe Price ID should start with \"price_\".");
-  }
 
   validateUrl(thumbnailUrl, "Thumbnail URL");
 
   await updateCourse(id, {
     title,
     description: data.description.trim(),
-    stripePriceId,
     isFree: data.isFree,
     thumbnailUrl,
   });

@@ -22,7 +22,7 @@ export async function createEnrollmentWithPurchase(
   stripeCustomerId: string,
   amountPaid: number,
   currency: string,
-  planType: "lifetime" | "subscription" = "lifetime"
+  planType: "lifetime" = "lifetime"
 ): Promise<boolean> {
   const enrollmentId = makeEnrollmentId(uid, courseId);
   const enrollmentRef = adminDb.collection("enrollments").doc(enrollmentId);

@@ -1,7 +1,8 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { adminAuth } from "@/lib/firebase/admin";
+import { authLimiter } from "@/lib/rate-limit";
 
 const SESSION_COOKIE_NAME = "__session";
 const SESSION_MAX_AGE = 60 * 60 * 24 * 5; // 5 days (in seconds)
@@ -12,6 +13,12 @@ const SESSION_MAX_AGE = 60 * 60 * 24 * 5; // 5 days (in seconds)
  * eliminating the mismatch between cookie lifetime and token lifetime.
  */
 export async function setSessionCookie(idToken: string) {
+  const headersList = await headers();
+  const ip = headersList.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
+  const { success } = authLimiter.limit(ip);
+  if (!success) {
+    throw new Error("Too many requests. Please try again later.");
+  }
   const sessionCookie = await adminAuth.createSessionCookie(idToken, {
     expiresIn: SESSION_MAX_AGE * 1000, // Firebase expects milliseconds
   });

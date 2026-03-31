@@ -43,8 +43,6 @@
       "Bash(export PATH=\"$PATH:/c/Program Files/GitHub CLI\")",
       "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" auth status 2>&1)",
       "Read(//c/Program Files/GitHub CLI//**)",
-      "Read(//c/Program Files \\(x86\\)/**)",
-      "Read(//c//**)",
       "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" pr create --title \"Redesign UI and add real resource data\" --body \"$\\(cat <<'EOF'\n## Summary\n- Redesign entire UI with NeetCode-inspired dark/light theme \\(blue-gray oklch color system\\)\n- NeetCode-style course layout: collapsible sidebar with sections, progress bar, lesson rating, table of contents\n- Resource hub overhaul: search bar, source icons \\(Ko-fi, GitHub, Booth, etc.\\), FREE badges, aligned cards\n- Replace 18 placeholder assets with 11 real Ko-fi VTuber resources from spreadsheet\n- Add Pro landing page, theme toggle, and global cursor pointer\n\n## Test plan\n- [ ] Verify dark/light theme toggle works across all pages\n- [ ] Browse resources with filters, search, and source icons\n- [ ] Navigate course lessons with sidebar, prev/next, and rating\n- [ ] Run `npm run seed:assets` to populate real resource data\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\nEOF\n\\)\")",
       "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" pr merge 1 --squash --delete-branch 2>&1)",
       "Bash(cmd.exe /c \"where gh\")",
@@ -75,7 +73,10 @@
       "Bash(python -c \"import sys,json; data=json.load\\(sys.stdin\\); [print\\(r[''''full_name''''], r[''''default_branch'''']\\) for r in data.get\\(''''items'''',[]\\)]\")",
       "mcp__plugin_playwright_playwright__browser_resize",
       "Bash(node -e \"const l = require\\(''lucide-react''\\); const names = Object.keys\\(l\\).filter\\(k => /twitter|youtube|instagram|twitch/i.test\\(k\\)\\); console.log\\(names\\)\")",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(export PATH=\"/c/Program Files/GitHub CLI:$PATH\")",
+      "Bash(gh auth:*)",
+      "Bash(gh api:*)"
     ],
     "ask": []
   }

@@ -36,7 +36,31 @@ export async function getAssets(
     baseQuery = baseQuery.where("source", "==", source);
   }
 
-  // Get total count for the filtered query
+  // When searching, fetch all matching docs and filter/paginate in memory.
+  // Without search, use Firestore offset pagination (faster for browsing).
+  if (q) {
+    const lower = q.toLowerCase();
+    const snapshot = await baseQuery.orderBy("createdAt", "desc").get();
+    const allAssets = snapshot.docs
+      .map((doc) => serializeDoc({ id: doc.id, ...(doc.data() as Asset) }))
+      .filter(
+        (a) =>
+          a.title.toLowerCase().includes(lower) ||
+          a.artistName.toLowerCase().includes(lower) ||
+          a.description.toLowerCase().includes(lower) ||
+          a.tags.some((t) => t.toLowerCase().includes(lower))
+      );
+
+    const totalCount = allAssets.length;
+    const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+    const safePage = Math.max(1, Math.min(page, totalPages));
+    const offset = (safePage - 1) * PAGE_SIZE;
+    const assets = allAssets.slice(offset, offset + PAGE_SIZE);
+
+    return { assets, totalCount, page: safePage, totalPages };
+  }
+
+  // No search query — use Firestore offset pagination
   const countSnapshot = await baseQuery.count().get();
   const totalCount = countSnapshot.data().count;
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
@@ -46,21 +70,9 @@ export async function getAssets(
   const query = baseQuery.orderBy("createdAt", "desc").offset(offset).limit(PAGE_SIZE);
   const snapshot = await query.get();
 
-  let assets: AssetWithId[] = snapshot.docs.map((doc) =>
+  const assets: AssetWithId[] = snapshot.docs.map((doc) =>
     serializeDoc({ id: doc.id, ...(doc.data() as Asset) })
   );
-
-  // Client-side search filter (MVP — use Algolia/Typesense for production)
-  if (q) {
-    const lower = q.toLowerCase();
-    assets = assets.filter(
-      (a) =>
-        a.title.toLowerCase().includes(lower) ||
-        a.artistName.toLowerCase().includes(lower) ||
-        a.description.toLowerCase().includes(lower) ||
-        a.tags.some((t) => t.toLowerCase().includes(lower))
-    );
-  }
 
   return { assets, totalCount, page: safePage, totalPages };
 }

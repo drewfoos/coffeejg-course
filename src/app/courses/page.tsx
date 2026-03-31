@@ -1,15 +1,16 @@
 import { getAllCourses } from "@/lib/firestore/courses";
-import { getLessons } from "@/lib/firestore/lessons";
+import { getLessonSummaries } from "@/lib/firestore/lessons";
 import { Badge } from "@/components/ui/badge";
+import Image from "next/image";
 import Link from "next/link";
 
 export default async function CoursesPage() {
   const courses = await getAllCourses();
 
-  // Fetch lesson counts in parallel
+  // Fetch lesson summaries (lightweight) in parallel
   const coursesWithMeta = await Promise.all(
     courses.map(async (course) => {
-      const lessons = await getLessons(course.id);
+      const lessons = await getLessonSummaries(course.id);
       const totalDuration = lessons.reduce(
         (sum, l) => sum + l.durationSeconds,
         0
@@ -47,12 +48,14 @@ export default async function CoursesPage() {
               className="group flex gap-5 rounded-lg border border-border/50 bg-card p-5 transition-colors hover:bg-accent/50"
             >
               {course.thumbnailUrl && (
-                <div className="hidden shrink-0 overflow-hidden rounded-md sm:block">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                <div className="relative hidden h-32 w-48 shrink-0 overflow-hidden rounded-md sm:block">
+                  <Image
                     src={course.thumbnailUrl}
                     alt={course.title}
-                    className="h-32 w-48 object-cover transition-transform group-hover:scale-105"
+                    fill
+                    sizes="192px"
+                    unoptimized
+                    className="object-cover transition-transform group-hover:scale-105"
                   />
                 </div>
               )}

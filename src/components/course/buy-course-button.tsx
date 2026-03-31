@@ -11,7 +11,6 @@ interface BuyCourseButtonProps {
   price: string;
   label?: string;
   variant?: "default" | "outline";
-  planType?: "lifetime" | "subscription";
 }
 
 export function BuyCourseButton({
@@ -19,7 +18,6 @@ export function BuyCourseButton({
   price,
   label,
   variant = "default",
-  planType = "lifetime",
 }: BuyCourseButtonProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -35,7 +33,7 @@ export function BuyCourseButton({
     setError("");
     setLoading(true);
     try {
-      const url = await createCheckoutSession(courseId, planType);
+      const url = await createCheckoutSession(courseId);
       window.location.href = url;
     } catch (err) {
       setError(

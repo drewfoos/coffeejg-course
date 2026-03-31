@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { HeartButton } from "./heart-button";
 import { AssetDetailModal } from "./asset-detail-modal";
 import { SourceIcon } from "./source-icon";
@@ -28,11 +29,12 @@ export function AssetCard({ asset, isFavorited }: AssetCardProps) {
         {/* Image */}
         <div className="relative aspect-[4/3] overflow-hidden bg-muted">
           {asset.imageUrl ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
+            <Image
               src={asset.imageUrl}
               alt={asset.title}
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
             />
           ) : (
             <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-primary/[0.08] via-muted to-primary/[0.04]">

@@ -20,7 +20,6 @@ export function CreateCourseForm() {
         const result = await createCourseAction({
           title: (fd.get("title") as string) ?? "",
           description: (fd.get("description") as string) ?? "",
-          stripePriceId: (fd.get("stripePriceId") as string) ?? "",
           isFree,
           thumbnailUrl: (fd.get("thumbnailUrl") as string) ?? "",
         });
@@ -87,29 +86,9 @@ export function CreateCourseForm() {
         </label>
 
         {!isFree && (
-          <div>
-            <label className="text-sm font-medium">
-              Stripe Price ID <span className="text-red-500">*</span>
-            </label>
-            <input
-              name="stripePriceId"
-              required={!isFree}
-              placeholder="price_1ABC..."
-              className="mt-1.5 block w-full rounded-md border border-border/50 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
-            />
-            <p className="mt-1 text-xs text-muted-foreground">
-              Find this in your{" "}
-              <a
-                href="https://dashboard.stripe.com/products"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary underline"
-              >
-                Stripe Dashboard
-              </a>{" "}
-              → Products → select product → copy the Price ID (starts with &quot;price_&quot;).
-            </p>
-          </div>
+          <p className="text-xs text-muted-foreground">
+            Paid courses use the global Stripe price configured in the STRIPE_PRICE_ID environment variable.
+          </p>
         )}
       </div>
 

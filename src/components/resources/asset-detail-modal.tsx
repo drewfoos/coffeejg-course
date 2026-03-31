@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import {
   Dialog,
   DialogContent,
@@ -29,11 +30,12 @@ export function AssetDetailModal({
         {/* Image */}
         <div className="relative aspect-[16/10] w-full bg-muted">
           {asset.imageUrl ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
+            <Image
               src={asset.imageUrl}
               alt={asset.title}
-              className="h-full w-full object-cover"
+              fill
+              sizes="(max-width: 672px) 100vw, 672px"
+              className="object-cover"
             />
           ) : (
             <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-gradient-to-br from-primary/[0.08] via-muted to-primary/[0.04]">

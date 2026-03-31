@@ -55,8 +55,6 @@ export interface Course {
   title: string;
   slug: string;
   description: string;
-  stripePriceId: string;
-  stripeSubPriceId?: string;
   isFree: boolean;
   thumbnailUrl: string;
   publishedAt: string;

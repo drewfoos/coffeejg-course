@@ -42,10 +42,8 @@ export default async function AdminDashboard() {
                   {" "}&middot;{" "}
                   {course.isFree ? (
                     <span className="text-green-500">Free</span>
-                  ) : course.stripePriceId ? (
-                    <span>Paid (Stripe connected)</span>
                   ) : (
-                    <span className="text-yellow-500">Paid (no Stripe Price ID!)</span>
+                    <span>Paid</span>
                   )}
                 </p>
               </div>

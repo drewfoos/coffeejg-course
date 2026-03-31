@@ -16,9 +16,14 @@ export default async function ResourcesPage({
 }) {
   const { tag, source, page: pageStr, q } = await searchParams;
   const page = Math.max(1, Number(pageStr) || 1);
-  const { assets, totalCount, totalPages } = await getAssets({ tag, source, page, q });
 
-  const user = await getCurrentUser();
+  // Parallelize independent data fetches
+  const [assetsResult, user] = await Promise.all([
+    getAssets({ tag, source, page, q }),
+    getCurrentUser(),
+  ]);
+  const { assets, totalCount, totalPages } = assetsResult;
+
   const favoriteIds = user
     ? await getFavoriteIds(
         user.uid,
