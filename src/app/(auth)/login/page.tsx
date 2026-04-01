@@ -47,7 +47,9 @@ export default function LoginPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to sign in.";
-      if (message.includes("invalid-credential")) {
+      if (message.includes("Security verification")) {
+        setError(message);
+      } else if (message.includes("invalid-credential")) {
         setError("Invalid email or password.");
       } else if (message.includes("too-many-requests")) {
         setError("Too many attempts. Please try again later.");

@@ -54,7 +54,9 @@ export default function SignupPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to create account.";
-      if (message.includes("email-already-in-use")) {
+      if (message.includes("Security verification")) {
+        setError(message);
+      } else if (message.includes("email-already-in-use")) {
         setError("An account with this email already exists.");
       } else if (message.includes("weak-password")) {
         setError("Password should be at least 6 characters.");
