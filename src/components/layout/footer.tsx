@@ -194,8 +194,26 @@ export function Footer() {
           ))}
         </div>
 
-        {/* Bottom spacer */}
-        <div className="mt-12" />
+        {/* Bottom bar */}
+        <div className="mt-10 flex flex-col items-center gap-2 border-t border-border/30 pt-5 sm:flex-row sm:justify-between">
+          <p className="text-xs text-muted-foreground/60">
+            &copy; {new Date().getFullYear()} CoffeeJG. All rights reserved.
+          </p>
+          <div className="flex gap-4">
+            <Link
+              href="/terms"
+              className="text-xs text-muted-foreground/60 transition-colors hover:text-muted-foreground"
+            >
+              Terms of Service
+            </Link>
+            <Link
+              href="/privacy"
+              className="text-xs text-muted-foreground/60 transition-colors hover:text-muted-foreground"
+            >
+              Privacy Policy
+            </Link>
+          </div>
+        </div>
       </div>
     </footer>
   );

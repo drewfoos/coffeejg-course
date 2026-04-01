@@ -1,5 +1,49 @@
 # Changelog
 
+## v0.5.7 — Universal Access Model, Settings Redesign & Security Hardening
+
+### Universal Access Model
+- Single purchase (monthly or lifetime) now unlocks ALL courses, not per-course
+- New `getActiveEnrollment(uid)` queries by userId + status + livemode (not scoped to courseId)
+- Lesson access, video API, progress tracking, checkout, and success page all updated to universal model
+- Webhook `checkout.session.completed` finds existing enrollment by query instead of composite ID
+- Webhook `customer.subscription.updated` looks up enrollment by `stripeSubscriptionId` instead of composite ID
+
+### Settings Page Redesign
+- Account info section: name, email, sign-in provider (Google logo or email icon), member since date
+- Course progress: overall progress bar + per-course circular SVG rings with percentage and lesson counts
+- Upgrade CTA for monthly subscribers ("Switch to Lifetime Access")
+- Sign out button in account section
+- Danger zone with hardened delete account flow
+
+### Account Deletion — Security Hardened
+- Fresh Firebase ID token re-authentication required (not just session cookie)
+- ID token UID cross-checked against session UID (prevents cross-account attacks)
+- Server-side confirmation phrase verification ("delete my account")
+- Rate limited: 2 attempts per 10 minutes per user
+- Cancels all Stripe subscriptions (via enrollment records AND stripeCustomerId fallback)
+- Deletes all Firestore data in chunked batches (499 ops per batch, stays under 500 limit)
+- Revokes all Firebase sessions, deletes Firebase Auth account, clears session cookie
+- Large confirmation dialog: warning icon, red theme, lists everything that will be deleted
+- Delete button disabled until user types exact confirmation phrase
+
+### Legal Pages
+- Terms of Service page (11 sections: acceptance, subscriptions, refunds, IP, acceptable use, etc.)
+- Privacy Policy page (10 sections: data collected, third-party services, cookies, retention, rights, etc.)
+- Footer updated with Terms and Privacy links
+- Signup page links to Terms of Service and Privacy Policy
+- Pro page links to Terms of Service at checkout
+
+### Billing Security Hardening
+- Rate limiting added to billing portal, cancel, and resume subscription actions (5/min)
+- Customer ID fallback query now filters by current Stripe livemode
+- `stripeCustomerId` backfill respects livemode
+- Checkout success page validates Stripe session_id format before API call
+- Livemode field added to purchase docs for correct customer ID resolution
+
+### Admin
+- Admin user enrollment list now includes `livemode` field (Test/Live badges render correctly)
+
 ## v0.5.6 — Custom Branded Video Player (Plyr)
 
 ### Video Player

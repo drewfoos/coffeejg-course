@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
-import { getEnrollment } from "@/lib/firestore/enrollments";
+import { getActiveEnrollment } from "@/lib/firestore/enrollments";
 import { getLesson } from "@/lib/firestore/lessons";
 import { validateId } from "@/lib/validation";
 import { apiLimiter } from "@/lib/rate-limit";
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Not authenticated." }, { status: 401, headers: CORS_HEADERS });
     }
 
-    const enrollment = await getEnrollment(user.uid, courseId);
+    const enrollment = await getActiveEnrollment(user.uid);
     if (enrollment?.status !== "active") {
       return NextResponse.json({ error: "No access." }, { status: 403, headers: CORS_HEADERS });
     }

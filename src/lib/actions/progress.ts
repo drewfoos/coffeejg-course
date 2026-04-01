@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
-import { getEnrollment } from "@/lib/firestore/enrollments";
+import { getActiveEnrollment } from "@/lib/firestore/enrollments";
 import { getLesson } from "@/lib/firestore/lessons";
 import { toggleLessonComplete } from "@/lib/firestore/progress";
 import { validateId } from "@/lib/validation";
@@ -20,7 +20,7 @@ export async function toggleLessonCompleteAction(
 
   // Verify the user has access to this lesson
   const [enrollment, lesson] = await Promise.all([
-    getEnrollment(user.uid, courseId),
+    getActiveEnrollment(user.uid),
     getLesson(courseId, lessonId),
   ]);
 

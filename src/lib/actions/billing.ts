@@ -5,16 +5,19 @@ import { stripe, stripeLiveMode } from "@/lib/stripe";
 import { adminDb } from "@/lib/firebase/admin";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { billingLimiter } from "@/lib/rate-limit";
 
 async function getStripeCustomerId(uid: string): Promise<string | null> {
   const userDoc = await adminDb.collection("users").doc(uid).get();
   const fromUser = userDoc.data()?.stripeCustomerId;
   if (fromUser) return fromUser;
 
-  // Fallback: look up from the most recent purchase record
+  // Fallback: look up from the most recent purchase record matching current Stripe mode.
+  // This prevents returning a test-mode customer ID when running in live mode.
   const purchaseSnap = await adminDb
     .collection("purchases")
     .where("userId", "==", uid)
+    .where("livemode", "==", stripeLiveMode)
     .limit(1)
     .get();
   if (purchaseSnap.empty) return null;
@@ -51,6 +54,9 @@ export async function createBillingPortalSession() {
   const user = await getCurrentUser();
   if (!user) throw new Error("Not authenticated");
 
+  const { success } = billingLimiter.limit(user.uid);
+  if (!success) throw new Error("Too many requests. Please try again later.");
+
   const stripeCustomerId = await getStripeCustomerId(user.uid);
   if (!stripeCustomerId) throw new Error("No billing account found");
 
@@ -68,6 +74,9 @@ export async function cancelSubscriptionAction(): Promise<{
 }> {
   const user = await getCurrentUser();
   if (!user) throw new Error("Not authenticated");
+
+  const { success: withinLimit } = billingLimiter.limit(user.uid);
+  if (!withinLimit) throw new Error("Too many requests. Please try again later.");
 
   // Find subscription from enrollment record (not by customer list)
   const subId = await getActiveSubscriptionId(user.uid);
@@ -93,6 +102,9 @@ export async function cancelSubscriptionAction(): Promise<{
 export async function resumeSubscriptionAction(): Promise<void> {
   const user = await getCurrentUser();
   if (!user) throw new Error("Not authenticated");
+
+  const { success: withinLimit } = billingLimiter.limit(user.uid);
+  if (!withinLimit) throw new Error("Too many requests. Please try again later.");
 
   const subId = await getActiveSubscriptionId(user.uid);
   if (!subId) throw new Error("No active subscription found.");

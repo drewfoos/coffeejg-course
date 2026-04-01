@@ -1,7 +1,7 @@
 "use server";
 
 import { getCurrentUser } from "@/lib/auth/get-current-user";
-import { getEnrollment } from "@/lib/firestore/enrollments";
+import { getActiveEnrollment } from "@/lib/firestore/enrollments";
 import { adminDb } from "@/lib/firebase/admin";
 import { stripe } from "@/lib/stripe";
 import { validateId } from "@/lib/validation";
@@ -24,8 +24,8 @@ export async function createCheckoutSession(
     throw new Error("Too many requests. Please try again later.");
   }
 
-  // Check if already enrolled
-  const existing = await getEnrollment(user.uid, courseId);
+  // Check if already enrolled (any active enrollment grants access to all courses)
+  const existing = await getActiveEnrollment(user.uid);
   if (existing?.status === "active") {
     // Only allow upgrading from monthly → lifetime.
     // All other cases (already lifetime, or buying monthly when already monthly) are blocked.
@@ -33,7 +33,7 @@ export async function createCheckoutSession(
       existing.planType === "monthly" && planType === "lifetime";
 
     if (!isUpgrading) {
-      throw new Error("You already have access to this course.");
+      throw new Error("You already have access.");
     }
   }
 

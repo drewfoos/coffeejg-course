@@ -99,7 +99,7 @@ Server Component runs this check on every lesson page load:
 
 1. Read lesson doc. If `isFree` → allow access.
 2. If not free, verify user's session cookie.
-3. Read `enrollments/{uid}::{courseId}`. If exists and `status === "active"` → allow access.
+3. Query `enrollments` for any active enrollment matching the user and current Stripe livemode. A single purchase (monthly or lifetime) unlocks **all** courses.
 4. Otherwise → show locked state with purchase CTA.
 
 Video embed URLs are resolved server-side via `/api/video` route, which re-verifies auth and enrollment before returning `{ provider, videoId }`. The client-side Plyr player renders custom branded controls (CoffeeJG purple) over the Vimeo/YouTube iframe, hiding all native chrome. Vimeo video IDs never appear in RSC payloads or client-side code. Right-click is disabled on the player container. Lesson article content (description, topics) is also gated — only sidebar metadata (title, order, duration, section) is sent to client components.
@@ -113,9 +113,12 @@ Video embed URLs are resolved server-side via `/api/video` route, which re-verif
 ## Data Flow Principles
 
 - **One source of truth per fact.** Enrollment doc = access. No denormalized arrays.
+- **Universal access model.** A single purchase (monthly or lifetime) unlocks all courses. Access checks query for any active enrollment, not a specific courseId. The enrollment doc still stores courseId for record-keeping.
 - **Composite IDs enforce uniqueness.** `{uid}::{courseId}` means one enrollment per user per course, structurally.
 - **All mutations are idempotent.** Firestore transactions check before writing. Retries and duplicate webhooks are safe.
 - **Server writes for all data.** All Firestore writes go through the Admin SDK (Server Actions / Route Handlers). Firestore security rules deny all client-side reads and writes.
 - **Input validation at boundaries.** All user-supplied IDs are validated against `^[a-zA-Z0-9_-]{1,128}$` before use in Firestore queries.
 - **Webhook deduplication.** Processed Stripe event IDs are claimed transactionally in `processedEvents` collection. Concurrent duplicates rejected; failed events unclaimed for retry.
 - **Security headers.** HSTS, X-Frame-Options DENY, X-Content-Type-Options nosniff, Permissions-Policy, Referrer-Policy applied via `next.config.ts`. X-Powered-By disabled.
+- **Account deletion hardened.** Self-service deletion requires: fresh ID token re-authentication, UID cross-check against session, server-side confirmation phrase, rate limiting (2/10min). Cancels all Stripe subscriptions, deletes all Firestore data (chunked batches), revokes all sessions, deletes Firebase Auth account.
+- **Rate limiting on all mutation paths.** Checkout (5/min), billing actions (5/min), auth (10/min), video API (30/min), account deletion (2/10min). In-memory per-instance limiter (effective with Vercel Fluid Compute instance reuse).

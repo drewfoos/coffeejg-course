@@ -92,6 +92,16 @@ export default async function AdminUserDetailPage({
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-semibold">VTubing Course</p>
+                      {enrollment.livemode === false && (
+                        <span className="rounded-full bg-yellow-500/10 px-2 py-0.5 text-xs text-yellow-500">
+                          Test
+                        </span>
+                      )}
+                      {enrollment.livemode === true && (
+                        <span className="rounded-full bg-green-500/10 px-2 py-0.5 text-xs text-green-500">
+                          Live
+                        </span>
+                      )}
                       {enrollment.cancelAtPeriodEnd && (
                         <span className="rounded-full bg-orange-500/10 px-2 py-0.5 text-xs text-orange-500">
                           Cancelling
@@ -156,9 +166,21 @@ export default async function AdminUserDetailPage({
                     &middot; Revoked
                   </p>
                 </div>
-                <span className="rounded-full bg-red-500/10 px-2.5 py-0.5 text-xs text-red-500">
-                  Revoked
-                </span>
+                <div className="flex items-center gap-2">
+                  {enrollment.livemode === false && (
+                    <span className="rounded-full bg-yellow-500/10 px-2 py-0.5 text-xs text-yellow-500">
+                      Test
+                    </span>
+                  )}
+                  {enrollment.livemode === true && (
+                    <span className="rounded-full bg-green-500/10 px-2 py-0.5 text-xs text-green-500">
+                      Live
+                    </span>
+                  )}
+                  <span className="rounded-full bg-red-500/10 px-2.5 py-0.5 text-xs text-red-500">
+                    Revoked
+                  </span>
+                </div>
               </div>
             ))}
           </div>
