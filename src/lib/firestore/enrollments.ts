@@ -32,6 +32,34 @@ export async function getEnrollment(
   } as Enrollment;
 }
 
+/**
+ * Find any active enrollment for the user (regardless of courseId).
+ * A single purchase (monthly or lifetime) unlocks all courses,
+ * so access checks should use this instead of getEnrollment().
+ */
+export async function getActiveEnrollment(
+  uid: string
+): Promise<Enrollment | null> {
+  const snap = await adminDb
+    .collection("enrollments")
+    .where("userId", "==", uid)
+    .where("status", "==", "active")
+    .where("livemode", "==", stripeLiveMode)
+    .limit(1)
+    .get();
+
+  if (snap.empty) return null;
+
+  const doc = snap.docs[0];
+  const data = doc.data()!;
+  return {
+    ...data,
+    id: doc.id,
+    enrolledAt: data.enrolledAt?.toDate?.()?.toISOString?.() ?? "",
+    currentPeriodEnd: data.currentPeriodEnd?.toDate?.()?.toISOString?.() ?? data.currentPeriodEnd ?? "",
+  } as unknown as Enrollment;
+}
+
 export async function createEnrollmentWithPurchase(
   uid: string,
   courseId: string,
@@ -102,6 +130,7 @@ export async function createEnrollmentWithPurchase(
       stripeCustomerId,
       amountPaid,
       currency,
+      livemode: livemode ?? false,
       purchasedAt: FieldValue.serverTimestamp(),
     });
 

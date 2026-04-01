@@ -76,3 +76,9 @@ export const authLimiter = createLimiter(10, 60_000, "auth");
 
 // API routes: 30 requests per 60s per IP
 export const apiLimiter = createLimiter(30, 60_000, "api");
+
+// Account deletion: 2 attempts per 10 minutes per user
+export const deleteAccountLimiter = createLimiter(2, 600_000, "deleteAccount");
+
+// Billing actions (cancel, resume, portal): 5 requests per 60s per user
+export const billingLimiter = createLimiter(5, 60_000, "billing");

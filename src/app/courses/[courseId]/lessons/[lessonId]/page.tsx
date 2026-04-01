@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getCourse } from "@/lib/firestore/courses";
 import { getLesson, getLessonSummaries } from "@/lib/firestore/lessons";
-import { getEnrollment } from "@/lib/firestore/enrollments";
+import { getActiveEnrollment } from "@/lib/firestore/enrollments";
 import { getCourseProgress } from "@/lib/firestore/progress";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
 import dynamic from "next/dynamic";
@@ -52,7 +52,7 @@ export default async function LessonPage({
 
   if (user) {
     const [enrollment, progress] = await Promise.all([
-      getEnrollment(user.uid, courseId),
+      getActiveEnrollment(user.uid),
       getCourseProgress(user.uid, courseId),
     ]);
 

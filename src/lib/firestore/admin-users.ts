@@ -161,6 +161,7 @@ export async function getUserEnrollments(
       stripeSubscriptionId: data.stripeSubscriptionId ?? undefined,
       cancelAtPeriodEnd: data.cancelAtPeriodEnd ?? false,
       currentPeriodEnd,
+      livemode: data.livemode,
     };
   });
 }

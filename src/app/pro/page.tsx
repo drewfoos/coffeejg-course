@@ -1,6 +1,6 @@
 import { Testimonials } from "@/components/testimonials";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
-import { getEnrollment } from "@/lib/firestore/enrollments";
+import { getActiveEnrollment } from "@/lib/firestore/enrollments";
 import { BuyCourseButton } from "@/components/course/buy-course-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,9 @@ import Link from "next/link";
 import { stripe } from "@/lib/stripe";
 import type { PlanType } from "@/lib/actions/checkout";
 
-const COURSE_ID = "3d-vtubing-with-warudo";
+// courseId used for Stripe metadata and navigation — the actual enrollment
+// grants access to ALL courses, not just this one.
+const DEFAULT_COURSE_ID = "3d-vtubing-with-warudo";
 
 // Cache both prices in memory to avoid hitting Stripe on every page load
 let priceCache: { data: { lifetime: string; monthly: string; monthlyInterval: string }; expiresAt: number } | null = null;
@@ -86,7 +88,7 @@ export default async function ProPage() {
     getPrices(),
   ]);
   const enrollment = user
-    ? await getEnrollment(user.uid, COURSE_ID)
+    ? await getActiveEnrollment(user.uid)
     : null;
   const isEnrolled = enrollment?.status === "active";
   const isCancelling = isEnrolled && enrollment?.cancelAtPeriodEnd === true;
@@ -170,7 +172,7 @@ export default async function ProPage() {
                   You already have full access to all course content.
                 </p>
                 <Link
-                  href={`/courses/${COURSE_ID}`}
+                  href={`/courses/${DEFAULT_COURSE_ID}`}
                   className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground hover:bg-primary/90"
                 >
                   Go to Course
@@ -232,7 +234,7 @@ export default async function ProPage() {
                     </div>
 
                     <BuyCourseButton
-                      courseId={COURSE_ID}
+                      courseId={DEFAULT_COURSE_ID}
                       price={plan.price}
                       planType={plan.planType}
                       label={`Get ${plan.name}`}
@@ -257,7 +259,11 @@ export default async function ProPage() {
               ))}
             </div>
             <p className="mt-6 text-center text-sm text-muted-foreground">
-              Secure payment powered by Stripe.
+              Secure payment powered by Stripe. By purchasing, you agree to our{" "}
+              <Link href="/terms" className="text-primary hover:underline">
+                Terms of Service
+              </Link>
+              .
             </p>
           </div>
         )}

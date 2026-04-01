@@ -7,7 +7,6 @@ import {
   revokeEnrollmentBySubscription,
   updateEnrollmentStatus,
 } from "@/lib/firestore/enrollments";
-import { makeEnrollmentId } from "@/lib/constants";
 import type Stripe from "stripe";
 
 export const dynamic = "force-dynamic";
@@ -79,20 +78,20 @@ export async function POST(request: Request) {
               ? (session.subscription as string)
               : undefined;
 
-          // Check existing enrollment to handle upgrades and prevent downgrades
-          const enrollmentId = makeEnrollmentId(firebaseUid, courseId);
-          const existingEnrollment = await adminDb
+          // Check existing enrollment to handle upgrades and prevent downgrades.
+          // Query by userId + status + livemode (not by composite ID) because
+          // a single purchase unlocks all courses — the enrollment may have any courseId.
+          const existingSnap = await adminDb
             .collection("enrollments")
-            .doc(enrollmentId)
+            .where("userId", "==", firebaseUid)
+            .where("status", "==", "active")
+            .where("livemode", "==", session.livemode)
+            .limit(1)
             .get();
-          const existingData = existingEnrollment.data();
-
-          // Only consider existing enrollment for downgrade/upgrade logic if it
-          // matches the current Stripe mode. A test enrollment should never block
-          // or influence a live purchase (and vice versa).
-          const existingMatchesMode =
-            existingData &&
-            (existingData.livemode ?? false) === session.livemode;
+          const existingData = existingSnap.empty
+            ? null
+            : existingSnap.docs[0].data();
+          const existingMatchesMode = !!existingData;
 
           // Never downgrade lifetime → monthly (even if a stale session completes)
           if (
@@ -144,39 +143,36 @@ export async function POST(request: Request) {
       }
 
       case "customer.subscription.updated": {
+        // Look up enrollment by stripeSubscriptionId (not composite ID)
+        // because a single purchase unlocks all courses.
         const subscription = event.data.object as Stripe.Subscription;
-        const metadata = subscription.metadata;
-        const firebaseUid = metadata?.firebaseUid;
-        const courseId = metadata?.courseId;
+        const snapshot = await adminDb
+          .collection("enrollments")
+          .where("stripeSubscriptionId", "==", subscription.id)
+          .limit(1)
+          .get();
 
-        if (firebaseUid && courseId) {
-          const enrollId = makeEnrollmentId(firebaseUid, courseId);
-          // Only update if this subscription is still the active one on the enrollment
-          const enrollDoc = await adminDb
-            .collection("enrollments")
-            .doc(enrollId)
-            .get();
-          if (enrollDoc.data()?.stripeSubscriptionId === subscription.id) {
-            const periodEnd =
-              subscription.items.data[0]?.current_period_end;
+        if (!snapshot.empty) {
+          const enrollId = snapshot.docs[0].id;
+          const periodEnd =
+            subscription.items.data[0]?.current_period_end;
 
-            await markCancelAtPeriodEnd(
-              enrollId,
-              subscription.cancel_at_period_end,
-              periodEnd ? new Date(periodEnd * 1000) : undefined
-            );
+          await markCancelAtPeriodEnd(
+            enrollId,
+            subscription.cancel_at_period_end,
+            periodEnd ? new Date(periodEnd * 1000) : undefined
+          );
 
-            // If subscription went past_due or unpaid, revoke access
-            if (
-              subscription.status === "past_due" ||
-              subscription.status === "unpaid"
-            ) {
-              await updateEnrollmentStatus(enrollId, "revoked");
-            }
-            // If subscription is re-activated (e.g. payment succeeded after past_due)
-            if (subscription.status === "active") {
-              await updateEnrollmentStatus(enrollId, "active");
-            }
+          // If subscription went past_due or unpaid, revoke access
+          if (
+            subscription.status === "past_due" ||
+            subscription.status === "unpaid"
+          ) {
+            await updateEnrollmentStatus(enrollId, "revoked");
+          }
+          // If subscription is re-activated (e.g. payment succeeded after past_due)
+          if (subscription.status === "active") {
+            await updateEnrollmentStatus(enrollId, "active");
           }
         }
         break;

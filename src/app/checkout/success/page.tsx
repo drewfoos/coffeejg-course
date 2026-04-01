@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
-import { getEnrollment } from "@/lib/firestore/enrollments";
+import { getActiveEnrollment } from "@/lib/firestore/enrollments";
 import { stripe } from "@/lib/stripe";
 
 export default async function CheckoutSuccessPage({
@@ -11,7 +11,8 @@ export default async function CheckoutSuccessPage({
 }) {
   const { session_id } = await searchParams;
 
-  if (!session_id) {
+  // Validate session_id format before sending to Stripe API
+  if (!session_id || !/^cs_(test_|live_)[a-zA-Z0-9]+$/.test(session_id)) {
     redirect("/");
   }
 
@@ -36,7 +37,7 @@ export default async function CheckoutSuccessPage({
     redirect("/");
   }
 
-  const enrollment = await getEnrollment(user.uid, courseId);
+  const enrollment = await getActiveEnrollment(user.uid);
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-16 text-center">
