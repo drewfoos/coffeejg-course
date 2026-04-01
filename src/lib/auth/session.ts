@@ -23,9 +23,6 @@ export async function setSessionCookie(idToken: string, turnstileToken?: string)
 
   // Verify Turnstile token (skipped if not provided — e.g. Google OAuth popup)
   if (turnstileToken !== undefined) {
-    if (!turnstileToken) {
-      throw new Error("Security verification not complete. Please wait a moment and try again.");
-    }
     const valid = await verifyTurnstileToken(turnstileToken);
     if (!valid) {
       throw new Error("Security verification failed. Please try again.");

@@ -15,6 +15,7 @@ export async function verifyTurnstileToken(token: string): Promise<boolean> {
   // Skip verification in dev if no secret configured
   if (!secret) return true;
 
+  // Token empty means widget hasn't solved yet
   if (!token) return false;
 
   try {
