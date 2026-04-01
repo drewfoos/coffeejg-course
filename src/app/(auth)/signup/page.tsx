@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   createUserWithEmailAndPassword,
   updateProfile,
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
+import { Turnstile } from "@/components/auth/turnstile";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -28,6 +29,11 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
+
+  const handleTurnstileVerify = useCallback((token: string) => {
+    setTurnstileToken(token);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +48,7 @@ export default function SignupPage() {
       );
       await updateProfile(credential.user, { displayName: name });
       const idToken = await credential.user.getIdToken();
-      await setSessionCookie(idToken);
+      await setSessionCookie(idToken, turnstileToken);
       await createUserDocIfNotExists(idToken, "email");
       router.push(redirectTo);
     } catch (err) {
@@ -130,6 +136,11 @@ export default function SignupPage() {
             className="h-11"
           />
         </div>
+
+        <Turnstile
+          onVerify={handleTurnstileVerify}
+          onExpire={() => setTurnstileToken("")}
+        />
 
         {error && (
           <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">

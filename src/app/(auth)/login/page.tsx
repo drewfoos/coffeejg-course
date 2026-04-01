@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
+import { Turnstile } from "@/components/auth/turnstile";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,6 +24,11 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
+
+  const handleTurnstileVerify = useCallback((token: string) => {
+    setTurnstileToken(token);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +42,7 @@ export default function LoginPage() {
         password
       );
       const idToken = await credential.user.getIdToken();
-      await setSessionCookie(idToken);
+      await setSessionCookie(idToken, turnstileToken);
       router.push(redirectTo);
     } catch (err) {
       const message =
@@ -116,6 +122,11 @@ export default function LoginPage() {
             className="h-11"
           />
         </div>
+
+        <Turnstile
+          onVerify={handleTurnstileVerify}
+          onExpire={() => setTurnstileToken("")}
+        />
 
         {error && (
           <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">

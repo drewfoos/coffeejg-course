@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.5.8 — Cloudflare Turnstile Bot Protection
+
+### Security
+- Added Cloudflare Turnstile to login, signup, and forgot-password forms
+- Server-side token verification via Cloudflare `siteverify` API before session creation
+- Forgot-password moved from client-side Firebase call to server action with Turnstile verification
+- Google OAuth skips Turnstile (Google has its own bot protection)
+- Graceful degradation: skips verification in dev (no secret key) and fails open if Cloudflare is unreachable
+- New env vars: `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`
+
 ## v0.5.7 — Universal Access Model, Settings Redesign & Security Hardening
 
 ### Universal Access Model
