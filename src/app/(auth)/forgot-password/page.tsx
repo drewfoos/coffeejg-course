@@ -1,18 +1,23 @@
 "use client";
 
-import { useState } from "react";
-import { sendPasswordResetEmail } from "firebase/auth";
+import { useState, useCallback } from "react";
 import Link from "next/link";
-import { auth } from "@/lib/firebase/client";
+import { sendPasswordResetAction } from "@/lib/actions/send-password-reset";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Turnstile } from "@/components/auth/turnstile";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
+
+  const handleTurnstileVerify = useCallback((token: string) => {
+    setTurnstileToken(token);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,10 +25,10 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      await sendPasswordResetEmail(auth, email);
+      await sendPasswordResetAction(email, turnstileToken);
       setSent(true);
     } catch {
-      setError("Failed to send reset email. Please check your email address.");
+      setError("Failed to send reset email. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -106,6 +111,11 @@ export default function ForgotPasswordPage() {
             className="h-11"
           />
         </div>
+
+        <Turnstile
+          onVerify={handleTurnstileVerify}
+          onExpire={() => setTurnstileToken("")}
+        />
 
         {error && (
           <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">

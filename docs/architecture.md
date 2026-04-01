@@ -35,6 +35,10 @@ Next.js on Vercel
 
 Firebase UID is the canonical user identity across all collections.
 
+### Bot Protection
+
+Cloudflare Turnstile is embedded on all public auth forms (login, signup, forgot-password). The widget runs a managed challenge (invisible for most users) and produces a token. The token is verified server-side via Cloudflare's `siteverify` API before the session cookie is created (login/signup) or the password reset email is sent. Google OAuth sign-in skips Turnstile (Google's own bot protection applies). In development, verification is skipped if no secret key is configured.
+
 ## Purchase Flow
 
 ```

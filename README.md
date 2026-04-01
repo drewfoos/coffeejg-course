@@ -80,6 +80,7 @@ This isn't a toy project. Payment security is treated seriously.
 | Layer | Implementation |
 |---|---|
 | **Auth** | Firebase session cookies with server-side verification and revocation checks |
+| **Bot Protection** | Cloudflare Turnstile on login, signup, and forgot-password — server-side token verification |
 | **Payments** | Stripe webhook signature verification, transactional event dedup, idempotent enrollment creation |
 | **Access** | Server-side only — enrollment doc existence = access. Firestore rules deny all client reads/writes |
 | **Video** | Vimeo IDs resolved server-side via `/api/video`. Custom Plyr controls hide native chrome. Right-click disabled. Never leaked to client or RSC payloads |
@@ -165,6 +166,8 @@ npm run dev
 | `STRIPE_LIFETIME_PRICE_ID` | Price ID for lifetime plan |
 | `STRIPE_MONTHLY_PRICE_ID` | Price ID for monthly subscription |
 | `NEXT_PUBLIC_APP_URL` | App URL for Stripe redirects |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare Turnstile site key |
+| `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile secret key |
 | `ADMIN_UIDS` | Comma-separated Firebase UIDs for admin access |
 
 See `.env.example` for the complete list.
