@@ -6,8 +6,6 @@ import Image from "next/image";
 import { VrmViewer } from "@/components/vrm-viewer";
 import { WavePath } from "@/components/ui/wave-path";
 import ThreeDMarquee from "@/components/ui/3d-marquee";
-import { Testimonials } from "@/components/testimonials";
-import { CtaSection } from "@/components/cta-section";
 import { Construction } from "lucide-react";
 // Static resource images for the marquee background — self-hosted WebP files
 const RESOURCE_IMAGES = Array.from(
@@ -150,11 +148,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <Testimonials />
-
-      {/* Final CTA */}
-      <CtaSection />
     </main>
   );
 }

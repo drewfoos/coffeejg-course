@@ -3,7 +3,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CtaSection } from "@/components/cta-section";
 
 export default function AboutPage() {
   return (
@@ -218,8 +217,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <CtaSection />
     </main>
   );
 }

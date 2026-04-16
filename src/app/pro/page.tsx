@@ -1,4 +1,3 @@
-import { Testimonials } from "@/components/testimonials";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
 import { getActiveEnrollment } from "@/lib/firestore/enrollments";
 import { BuyCourseButton } from "@/components/course/buy-course-button";
@@ -9,6 +8,8 @@ import { Check, Video, BarChart3, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { stripe } from "@/lib/stripe";
 import type { PlanType } from "@/lib/actions/checkout";
+
+const IS_DEV = process.env.NODE_ENV === "development";
 
 // courseId used for Stripe metadata and navigation — the actual enrollment
 // grants access to ALL courses, not just this one.
@@ -83,6 +84,36 @@ const PERKS = [
 ];
 
 export default async function ProPage() {
+  if (!IS_DEV) {
+    return (
+      <main>
+        <section className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-pink-500/5" />
+          <div className="relative mx-auto max-w-3xl px-4 py-32 text-center">
+            <Badge variant="secondary" className="mb-6">
+              PRO
+            </Badge>
+            <h1 className="text-4xl font-bold tracking-tight lg:text-5xl">
+              <span className="bg-gradient-to-r from-primary to-pink-500 bg-clip-text text-transparent">
+                Coming Soon
+              </span>
+            </h1>
+            <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
+              We&apos;re putting the finishing touches on our Pro courses.
+              Check back soon for full access to all video lessons.
+            </p>
+            <Link
+              href="/resources"
+              className="mt-8 inline-flex h-10 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              Browse Free Resources
+            </Link>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
   const [user, prices] = await Promise.all([
     getCurrentUser(),
     getPrices(),
@@ -288,9 +319,6 @@ export default async function ProPage() {
           </div>
         </div>
       </section>
-
-      {/* Testimonials */}
-      <Testimonials />
 
     </main>
   );
