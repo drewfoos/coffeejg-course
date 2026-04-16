@@ -39,6 +39,17 @@ yarn-error.log*
 # claude code local settings (machine-specific permissions)
 .claude/settings.local.json
 
+# scraping data (Discord threads, embeds, intermediate enrichment files)
+scripts/thread-*.json
+scripts/embeds-*.json
+scripts/assets-phase1.json
+scripts/discord-scrape-combined.json
+scripts/discord-threads.json
+scripts/kofi-artists-*.json
+scripts/truncation-fixes.json
+threads.json
+channel-root.yml
+
 # vercel
 .vercel
 

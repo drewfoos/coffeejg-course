@@ -3,7 +3,7 @@ import { getAssets } from "@/lib/firestore/assets";
 import { getFavoriteIds } from "@/lib/firestore/favorites";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
 import { AssetCard } from "@/components/resources/asset-card";
-import { SourceFilter, CategoryFilter } from "@/components/resources/filter-bar";
+import { FilterBar } from "@/components/resources/filter-bar";
 import { PaginationControls } from "@/components/resources/pagination-controls";
 import { SearchBar } from "@/components/resources/search-bar";
 import { HeroParticles } from "@/components/resources/hero-particles";
@@ -12,14 +12,21 @@ import Link from "next/link";
 export default async function ResourcesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tag?: string; source?: string; page?: string; q?: string }>;
+  searchParams: Promise<{ tags?: string; sources?: string; page?: string; q?: string }>;
 }) {
-  const { tag, source, page: pageStr, q } = await searchParams;
+  const { tags: tagsParam, sources: sourcesParam, page: pageStr, q } = await searchParams;
   const page = Math.max(1, Number(pageStr) || 1);
+  const tags = tagsParam ? tagsParam.split(",").filter(Boolean) : [];
+  const sources = sourcesParam ? sourcesParam.split(",").filter(Boolean) : [];
 
   // Parallelize independent data fetches
   const [assetsResult, user] = await Promise.all([
-    getAssets({ tag, source, page, q }),
+    getAssets({
+      tags: tags.length > 0 ? tags : undefined,
+      sources: sources.length > 0 ? sources : undefined,
+      page,
+      q,
+    }),
     getCurrentUser(),
   ]);
   const { assets, totalCount, totalPages } = assetsResult;
@@ -31,11 +38,11 @@ export default async function ResourcesPage({
       )
     : new Set<string>();
 
-  const hasFilters = !!(tag || source || q);
+  const hasFilters = !!(tags.length || sources.length || q);
 
   return (
     <main>
-      {/* Hero — title, filters, search, particles, waves */}
+      {/* Hero — title, search, particles, waves */}
       <div className="relative overflow-hidden pb-20">
         {/* Gradient — uses primary hue so it works in both modes */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/12 via-primary/6 to-transparent" />
@@ -45,7 +52,6 @@ export default async function ResourcesPage({
         <div className="absolute left-1/2 top-0 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-primary/12 blur-[140px]" />
         <div className="absolute -left-24 top-1/3 h-64 w-64 rounded-full bg-pink-500/[0.08] blur-[100px]" />
         <div className="absolute -right-24 top-1/4 h-64 w-64 rounded-full bg-fuchsia-500/[0.07] blur-[100px]" />
-
 
         {/* Interactive particles */}
         <div className="absolute inset-0">
@@ -64,16 +70,9 @@ export default async function ResourcesPage({
             </p>
           </div>
 
-          {/* Source filter pills */}
-          <div className="pt-8">
-            <Suspense>
-              <SourceFilter />
-            </Suspense>
-          </div>
-
-          {/* Search bar + Favorites — inside hero */}
-          <div className="mx-auto mt-6 flex max-w-2xl items-center gap-3 pb-6">
-            <div className="flex-1">
+          {/* Search bar + Favorites */}
+          <div className="mx-auto mt-8 flex max-w-xl items-center justify-center gap-3 pb-6">
+            <div className="w-full">
               <Suspense>
                 <SearchBar />
               </Suspense>
@@ -94,15 +93,12 @@ export default async function ResourcesPage({
 
         {/* Layered waves — theme-aware fills */}
         <div className="absolute bottom-0 left-0 w-full">
-          {/* Wave 1 — back, primary tint */}
           <svg className="block w-full text-primary/[0.12]" viewBox="0 0 1440 120" fill="none" preserveAspectRatio="none" style={{ height: "80px" }}>
             <path d="M0,80 C180,120 360,40 540,70 C720,100 900,30 1080,60 C1200,80 1320,50 1440,70 L1440,120 L0,120 Z" fill="currentColor" />
           </svg>
-          {/* Wave 2 — mid, muted tint */}
           <svg className="absolute bottom-0 left-0 block w-full text-primary/[0.07]" viewBox="0 0 1440 100" fill="none" preserveAspectRatio="none" style={{ height: "65px" }}>
             <path d="M0,50 C200,90 440,20 660,55 C880,90 1100,25 1320,50 C1380,58 1420,45 1440,50 L1440,100 L0,100 Z" fill="currentColor" />
           </svg>
-          {/* Wave 3 — front, background */}
           <svg className="absolute bottom-0 left-0 block w-full" viewBox="0 0 1440 80" fill="none" preserveAspectRatio="none" style={{ height: "50px" }}>
             <path d="M0,40 C240,70 480,15 720,40 C960,65 1200,20 1440,45 L1440,80 L0,80 Z" fill="var(--background)" />
           </svg>
@@ -111,26 +107,16 @@ export default async function ResourcesPage({
 
       {/* Results */}
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
-        {/* Results toolbar */}
-        <div className="flex items-center justify-between pb-4">
-          <p className="text-sm text-muted-foreground">
+        {/* Toolbar — filter button + active pills + count */}
+        <div className="flex flex-wrap items-center gap-3 pb-5">
+          <Suspense>
+            <FilterBar />
+          </Suspense>
+          <span className="ml-auto text-sm text-muted-foreground">
             {totalCount === 0
               ? "No resources found"
               : `${totalCount} resource${totalCount !== 1 ? "s" : ""}`}
-          </p>
-          <div className="flex items-center gap-3">
-            {hasFilters && (
-              <Link
-                href="/resources"
-                className="text-sm text-primary transition-colors hover:text-primary/80"
-              >
-                Clear filters
-              </Link>
-            )}
-            <Suspense>
-              <CategoryFilter />
-            </Suspense>
-          </div>
+          </span>
         </div>
 
         {/* Grid */}

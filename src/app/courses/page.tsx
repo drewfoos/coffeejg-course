@@ -1,24 +1,9 @@
-import { getAllCourses } from "@/lib/firestore/courses";
-import { getLessonSummaries } from "@/lib/firestore/lessons";
 import { Badge } from "@/components/ui/badge";
-import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Construction, Bell } from "lucide-react";
 import Link from "next/link";
 
-export default async function CoursesPage() {
-  const courses = await getAllCourses();
-
-  // Fetch lesson summaries (lightweight) in parallel
-  const coursesWithMeta = await Promise.all(
-    courses.map(async (course) => {
-      const lessons = await getLessonSummaries(course.id);
-      const totalDuration = lessons.reduce(
-        (sum, l) => sum + l.durationSeconds,
-        0
-      );
-      return { ...course, lessonCount: lessons.length, totalDuration };
-    })
-  );
-
+export default function CoursesPage() {
   return (
     <main>
       <section className="relative overflow-hidden border-b border-border/50">
@@ -35,63 +20,55 @@ export default async function CoursesPage() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-4xl px-4 py-10">
+      <div className="mx-auto max-w-2xl px-4 py-20">
+        <div className="flex flex-col items-center text-center">
+          <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10">
+            <Construction className="h-10 w-10 text-primary" />
+          </div>
 
-      {coursesWithMeta.length === 0 ? (
-        <p className="text-muted-foreground">No courses available yet.</p>
-      ) : (
-        <div className="grid gap-6">
-          {coursesWithMeta.map((course) => (
-            <Link
-              key={course.id}
-              href={`/courses/${course.id}`}
-              className="group flex gap-5 rounded-lg border border-border/50 bg-card p-5 transition-colors hover:bg-accent/50"
-            >
-              {course.thumbnailUrl && (
-                <div className="relative hidden h-32 w-48 shrink-0 overflow-hidden rounded-md sm:block">
-                  <Image
-                    src={course.thumbnailUrl}
-                    alt={course.title}
-                    fill
-                    sizes="192px"
-                    unoptimized
-                    className="object-cover transition-transform group-hover:scale-105"
-                  />
-                </div>
-              )}
-              <div className="flex min-w-0 flex-col justify-center">
-                <h2 className="text-lg font-semibold group-hover:text-primary transition-colors">
-                  {course.title}
-                </h2>
-                <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                  {course.description}
-                </p>
-                <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
-                  <span className="rounded border border-border/50 px-1.5 py-0.5">
-                    {course.lessonCount} lessons
-                  </span>
-                  <span className="rounded border border-border/50 px-1.5 py-0.5">
-                    {formatTotalDuration(course.totalDuration)}
-                  </span>
-                  {course.isFree && (
-                    <span className="rounded border border-primary px-1.5 py-0.5 font-semibold text-primary">
-                      FREE
-                    </span>
-                  )}
-                </div>
-              </div>
+          <h2 className="mt-8 text-2xl font-bold">Under Development</h2>
+          <p className="mt-3 max-w-md text-muted-foreground leading-relaxed">
+            We&apos;re building comprehensive VTubing courses covering
+            everything from initial setup to advanced streaming techniques.
+            Check back soon!
+          </p>
+
+          <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row">
+            <Link href="/resources">
+              <Button size="lg" className="px-8">
+                Browse Free Resources
+              </Button>
             </Link>
-          ))}
+          </div>
+
+          <div className="mt-16 w-full rounded-xl border border-border/50 bg-card/60 p-8 backdrop-blur-sm">
+            <div className="flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground">
+              <Bell className="h-4 w-4" />
+              <span>What to expect</span>
+            </div>
+            <div className="mt-6 grid gap-6 text-left sm:grid-cols-3">
+              <div>
+                <p className="font-semibold">3D VTubing with Warudo</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Complete guide from first setup to going live
+                </p>
+              </div>
+              <div>
+                <p className="font-semibold">Video Lessons</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Step-by-step walkthroughs with real examples
+                </p>
+              </div>
+              <div>
+                <p className="font-semibold">Lifetime Access</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Pay once, access forever — including updates
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
-      )}
       </div>
     </main>
   );
-}
-
-function formatTotalDuration(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.round((seconds % 3600) / 60);
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  return `${minutes}m`;
 }

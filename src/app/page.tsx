@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
@@ -9,23 +8,14 @@ import { WavePath } from "@/components/ui/wave-path";
 import ThreeDMarquee from "@/components/ui/3d-marquee";
 import { Testimonials } from "@/components/testimonials";
 import { CtaSection } from "@/components/cta-section";
-import { getAllCourses } from "@/lib/firestore/courses";
-import { getLessonSummaries } from "@/lib/firestore/lessons";
+import { Construction } from "lucide-react";
 // Static resource images for the marquee background — self-hosted WebP files
 const RESOURCE_IMAGES = Array.from(
   { length: 40 },
   (_, i) => `/images/resources/resource-${String(i + 1).padStart(2, "0")}.webp`
 );
 
-export default async function Home() {
-  const courses = await getAllCourses();
-
-  const coursesWithMeta = await Promise.all(
-    courses.map(async (course) => {
-      const lessons = await getLessonSummaries(course.id);
-      return { ...course, lessonCount: lessons.length };
-    })
-  );
+export default function Home() {
   return (
     <main>
       {/* Hero */}
@@ -35,36 +25,36 @@ export default async function Home() {
           {/* Left: Text */}
           <div className="max-w-xl flex-1">
             <Badge variant="secondary" className="mb-6">
-              Now Available
+              Your VTubing Journey Starts Here
             </Badge>
             <h1 className="text-5xl font-bold leading-tight tracking-tight lg:text-6xl">
               Learn{" "}
               <span className="bg-gradient-to-r from-primary to-pink-500 bg-clip-text text-transparent">
                 3D VTubing
               </span>{" "}
-              with Warudo
+              with CoffeeJG
             </h1>
             <p className="mt-6 text-xl leading-relaxed text-muted-foreground">
-              Structured courses and curated resources to help you become a
+              Courses, curated resources, and everything you need to become a
               professional 3D VTuber. From first setup to going live.
             </p>
             <div className="mt-10 flex gap-4">
-              <Link href="/courses/3d-vtubing-with-warudo">
+              <Link href="/resources">
                 <Button size="lg" className="px-8">
-                  Get Started
+                  Browse Resources
                 </Button>
               </Link>
               <Link href="/courses">
                 <Button size="lg" variant="outline" className="px-8">
-                  Browse Courses
+                  View Courses
                 </Button>
               </Link>
             </div>
 
             <div className="mt-12 flex items-center gap-8">
               <div>
-                <p className="text-2xl font-bold">10+</p>
-                <p className="text-sm text-muted-foreground">Video Lessons</p>
+                <p className="text-2xl font-bold">490+</p>
+                <p className="text-sm text-muted-foreground">Free Assets</p>
               </div>
               <Separator orientation="vertical" className="h-10" />
               <div>
@@ -107,76 +97,26 @@ export default async function Home() {
         <WavePath />
       </div>
 
-      {/* Courses Section */}
+      {/* Courses Coming Soon */}
       <section className="bg-card/50 py-20">
-        <div className="mx-auto max-w-7xl px-8 lg:px-16">
-          <div className="mb-10 text-center">
-            <h2 className="text-3xl font-bold">
-              {coursesWithMeta.length === 1 ? "Featured Course" : "Courses"}
-            </h2>
-            <p className="mt-3 text-lg text-muted-foreground">
-              Everything you need to start your VTubing journey
+        <div className="mx-auto max-w-3xl px-8 lg:px-16">
+          <div className="flex flex-col items-center text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10">
+              <Construction className="h-7 w-7 text-primary" />
+            </div>
+            <h2 className="mt-6 text-3xl font-bold">Courses Coming Soon</h2>
+            <p className="mt-3 max-w-lg text-lg text-muted-foreground">
+              We&apos;re building comprehensive video courses covering
+              everything from initial setup to advanced streaming techniques.
             </p>
-          </div>
-
-          <div className={
-            coursesWithMeta.length === 1
-              ? "mx-auto max-w-2xl"
-              : coursesWithMeta.length === 2
-                ? "grid gap-6 sm:grid-cols-2 mx-auto max-w-4xl"
-                : "grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
-          }>
-            {coursesWithMeta.map((course) => (
-              <Link key={course.id} href={`/courses/${course.id}`} className="block">
-                <Card className="overflow-hidden transition-all hover:shadow-lg h-full">
-                  <div className="relative aspect-video bg-muted">
-                    {course.thumbnailUrl ? (
-                      <Image
-                        src={course.thumbnailUrl}
-                        alt={course.title}
-                        fill
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                        className="object-cover"
-                        unoptimized
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/20 to-pink-500/20">
-                        <span className="text-lg font-medium text-muted-foreground">
-                          {course.title}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  <CardContent className="p-6">
-                    <div className="mb-3 flex items-center gap-2">
-                      <Badge variant="secondary">
-                        {course.lessonCount} {course.lessonCount === 1 ? "Lesson" : "Lessons"}
-                      </Badge>
-                      {course.isFree && (
-                        <Badge variant="outline" className="border-primary text-primary">
-                          Free
-                        </Badge>
-                      )}
-                    </div>
-                    <h3 className="text-xl font-bold">{course.title}</h3>
-                    <p className="mt-2 line-clamp-2 text-sm text-muted-foreground leading-relaxed">
-                      {course.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-
-          {coursesWithMeta.length > 3 && (
-            <div className="mt-8 text-center">
+            <div className="mt-8">
               <Link href="/courses">
                 <Button variant="outline" size="lg" className="px-8">
-                  View All Courses
+                  Learn More
                 </Button>
               </Link>
             </div>
-          )}
+          </div>
         </div>
       </section>
 

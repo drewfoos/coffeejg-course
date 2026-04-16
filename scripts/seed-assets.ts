@@ -2,7 +2,7 @@ import * as dotenv from "dotenv";
 import { resolve } from "path";
 import { readFileSync } from "fs";
 import { initializeApp, cert, getApps } from "firebase-admin/app";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getFirestore } from "firebase-admin/firestore";
 
 dotenv.config({ path: resolve(__dirname, "../.env.local") });
 dotenv.config({ path: resolve(__dirname, "../.env") });
@@ -28,7 +28,7 @@ const app =
 
 const db = getFirestore(app);
 
-interface AssetData {
+interface EnrichedAsset {
   id: string;
   title: string;
   artistName: string;
@@ -38,40 +38,56 @@ interface AssetData {
   source: string;
   externalUrl: string;
   free: boolean;
-}
-
-async function clearAssets() {
-  console.log("Clearing existing assets...");
-  const snapshot = await db.collection("assets").get();
-  const batch = db.batch();
-  snapshot.docs.forEach((doc) => batch.delete(doc.ref));
-  await batch.commit();
-  console.log(`  ✓ Deleted ${snapshot.size} existing assets.\n`);
+  postedAt?: string;
 }
 
 async function seedAssets() {
-  await clearAssets();
+  const raw = readFileSync(
+    resolve(__dirname, "assets-enriched.json"),
+    "utf-8"
+  );
+  const data = JSON.parse(raw);
+  const assets: EnrichedAsset[] = data.assets;
 
-  const raw = readFileSync(resolve(__dirname, "../data/assets.json"), "utf-8");
-  const assets: AssetData[] = JSON.parse(raw);
+  console.log(`Importing ${assets.length} assets to Firestore...\n`);
 
-  console.log(`Seeding ${assets.length} assets...`);
+  const BATCH_LIMIT = 500;
+  let batch = db.batch();
+  let batchCount = 0;
+  let total = 0;
 
   for (const asset of assets) {
-    const { id: assetId, ...assetFields } = asset;
-    console.log(`  Writing asset: ${assetId}`);
-    await db
-      .collection("assets")
-      .doc(assetId)
-      .set({
-        ...assetFields,
-        createdAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp(),
-      });
-    console.log(`    ✓ "${assetFields.title}" written.`);
+    const now = new Date().toISOString();
+    const ref = db.collection("assets").doc(asset.id);
+    batch.set(ref, {
+      title: asset.title,
+      artistName: asset.artistName,
+      description: asset.description || "",
+      imageUrl: asset.imageUrl || "",
+      tags: asset.tags,
+      source: asset.source,
+      externalUrl: asset.externalUrl,
+      free: asset.free,
+      createdAt: asset.postedAt || now,
+      updatedAt: now,
+    });
+    batchCount++;
+    total++;
+
+    if (batchCount === BATCH_LIMIT) {
+      await batch.commit();
+      console.log(`  Committed batch (${total}/${assets.length})`);
+      batch = db.batch();
+      batchCount = 0;
+    }
   }
 
-  console.log(`\nDone! Seeded ${assets.length} assets.`);
+  if (batchCount > 0) {
+    await batch.commit();
+    console.log(`  Committed final batch (${total}/${assets.length})`);
+  }
+
+  console.log(`\nDone! Imported ${total} assets.`);
 }
 
 seedAssets().catch((err) => {

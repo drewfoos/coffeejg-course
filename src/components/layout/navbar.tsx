@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { Coffee } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
 import { UserMenu } from "./user-menu";
 import { Button } from "@/components/ui/button";
@@ -15,14 +15,7 @@ export async function Navbar() {
         {/* Left */}
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2">
-            <Image
-              src="/images/branding/logo-coffee-nobg.svg"
-              alt="CoffeeJG"
-              width={36}
-              height={36}
-              className="h-9 w-9"
-              priority
-            />
+            <Coffee className="h-7 w-7 text-primary" />
           </Link>
           <nav className="hidden items-center gap-6 sm:flex">
             <Link

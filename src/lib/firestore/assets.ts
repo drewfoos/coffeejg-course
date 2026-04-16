@@ -8,8 +8,8 @@ export interface AssetWithId extends Asset {
 }
 
 interface GetAssetsOptions {
-  tag?: string;
-  source?: string;
+  tags?: string[];
+  sources?: string[];
   page?: number;
   q?: string;
 }
@@ -24,32 +24,46 @@ interface GetAssetsResult {
 export async function getAssets(
   options: GetAssetsOptions
 ): Promise<GetAssetsResult> {
-  const { tag, source, q, page = 1 } = options;
+  const { tags, sources, q, page = 1 } = options;
+
+  const needsMemoryFilter = (tags && tags.length > 0) || (sources && sources.length > 1) || q;
 
   let baseQuery: FirebaseFirestore.Query = adminDb.collection("assets");
 
-  if (tag) {
-    baseQuery = baseQuery.where("tags", "array-contains", tag);
+  // Firestore can handle one array-contains and one "in" natively.
+  // For multiple tags we must filter in memory.
+  if (tags && tags.length === 1) {
+    baseQuery = baseQuery.where("tags", "array-contains", tags[0]);
   }
 
-  if (source) {
-    baseQuery = baseQuery.where("source", "==", source);
+  if (sources && sources.length === 1) {
+    baseQuery = baseQuery.where("source", "==", sources[0]);
+  } else if (sources && sources.length > 1 && sources.length <= 30) {
+    baseQuery = baseQuery.where("source", "in", sources);
   }
 
-  // When searching, fetch all matching docs and filter/paginate in memory.
-  // Without search, use Firestore offset pagination (faster for browsing).
-  if (q) {
-    const lower = q.toLowerCase();
+  if (needsMemoryFilter) {
     const snapshot = await baseQuery.orderBy("createdAt", "desc").get();
-    const allAssets = snapshot.docs
-      .map((doc) => serializeDoc({ id: doc.id, ...(doc.data() as Asset) }))
-      .filter(
+    let allAssets = snapshot.docs.map((doc) =>
+      serializeDoc({ id: doc.id, ...(doc.data() as Asset) })
+    );
+
+    if (tags && tags.length > 1) {
+      allAssets = allAssets.filter((a) =>
+        tags.some((t) => a.tags.includes(t))
+      );
+    }
+
+    if (q) {
+      const lower = q.toLowerCase();
+      allAssets = allAssets.filter(
         (a) =>
           a.title.toLowerCase().includes(lower) ||
           a.artistName.toLowerCase().includes(lower) ||
           a.description.toLowerCase().includes(lower) ||
           a.tags.some((t) => t.toLowerCase().includes(lower))
       );
+    }
 
     const totalCount = allAssets.length;
     const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
@@ -60,7 +74,7 @@ export async function getAssets(
     return { assets, totalCount, page: safePage, totalPages };
   }
 
-  // No search query — run count and paginated fetch in parallel
+  // Simple case — run count and paginated fetch in parallel
   const offset = (page - 1) * PAGE_SIZE;
   const [countSnapshot, snapshot] = await Promise.all([
     baseQuery.count().get(),
