@@ -36,6 +36,18 @@ export default async function AdminLayout({
           >
             Users
           </Link>
+          <Link
+            href="/admin/assets"
+            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Resources
+          </Link>
+          <Link
+            href="/admin/suggestions"
+            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Suggestions
+          </Link>
           <div className="ml-auto text-xs text-muted-foreground">
             {user.email}
           </div>

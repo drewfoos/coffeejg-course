@@ -108,3 +108,15 @@ export interface Favorite {
   assetId: string;
   favoritedAt: string;
 }
+
+export interface Suggestion {
+  userId: string;
+  userEmail: string;
+  externalUrl: string;
+  source: string;
+  note: string;
+  status: "new" | "approved" | "rejected" | "imported";
+  createdAt: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+}

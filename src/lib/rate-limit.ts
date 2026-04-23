@@ -82,3 +82,7 @@ export const deleteAccountLimiter = createLimiter(2, 600_000, "deleteAccount");
 
 // Billing actions (cancel, resume, portal): 5 requests per 60s per user
 export const billingLimiter = createLimiter(5, 60_000, "billing");
+
+// Resource suggestions: 3 requests per 60s per user (burst guard — the
+// Firestore-backed 24h cap in the suggest action is the authoritative limit)
+export const suggestionLimiter = createLimiter(3, 60_000, "suggestion");

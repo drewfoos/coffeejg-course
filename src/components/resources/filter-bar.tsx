@@ -16,32 +16,7 @@ import {
   SheetFooter,
   SheetClose,
 } from "@/components/ui/sheet";
-
-const TAGS = [
-  "2D",
-  "3D",
-  "Overlays & Alerts",
-  "Emotes/Stickers/Badges",
-  "Character Assets",
-  "Clothing/Accessories",
-  "Live2D/3D/PNGtuber Models",
-  "VRoid",
-  "VRM",
-  "VRChat",
-  "Backgrounds",
-  "Background Music",
-  "Schedules",
-  "Panels",
-  "Thumbnails",
-  "Objects",
-  "Hands",
-  "Outfits",
-  "Badges",
-  "Emotes",
-  "Guides",
-];
-
-const SOURCES = ["Ko-fi", "Booth", "VGen", "Gumroad", "Twitter/X", "itch.io"];
+import { RESOURCE_TAGS as TAGS, RESOURCE_SOURCES as SOURCES } from "@/lib/resource-taxonomy";
 
 function parseList(param: string | null): string[] {
   if (!param) return [];

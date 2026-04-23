@@ -1,5 +1,34 @@
 # Changelog
 
+## v0.6.0 — Resource Suggestions & Admin Resource Management
+
+### User-facing
+- Signed-in users can suggest resources via a dialog on `/resources` (shadcn Dialog, opens from a button under the search bar next to Favorites)
+- URL normalization strips tracking params and enforces an allowlist of sources (Ko-fi, Booth, VGen, Gumroad, Twitter/X, itch.io)
+- Duplicate detection against existing `assets` and prior `suggestions`
+- Idempotent writes: deterministic doc id from URL hash + atomic Firestore `create()` means double-clicks and retries are safe no-ops
+
+### Abuse protection (layered, in order)
+- Auth gate via session cookie
+- In-memory burst limiter: 3 requests/min/uid
+- Cloudflare Turnstile (server-side siteverify)
+- Account age gate: accounts must be ≥ 24h old
+- Length caps: URL ≤ 500, note ≤ 500
+- URL allowlist (host-based)
+- Firestore-backed daily cap: 5 suggestions/uid/24h (distributed, survives instance reuse)
+- Duplicate checks vs. assets and prior suggestions
+
+### Admin
+- New `/admin/suggestions` page — tabs for New / Imported / Rejected / All; Import, Reject, and Reopen actions
+- New `/admin/assets` page — list + delete; "New resource" CTA
+- New `/admin/assets/new` — manual asset creation, prefills from a suggestion via `?suggestion=<id>` and marks it `imported` on save
+- Nav updated with Resources + Suggestions links
+
+### Infrastructure
+- `firestore.indexes.json` with composite indexes for suggestions queries (`status+createdAt`, `userId+createdAt`)
+- Shared taxonomy (`src/lib/resource-taxonomy.ts`) for tags + sources — filter bar and admin form share one source of truth
+- `Suggestion` type added to `src/lib/types.ts`
+
 ## v0.5.9 — Resource Hub Filter Bug Fixes
 
 ### Bug Fixes

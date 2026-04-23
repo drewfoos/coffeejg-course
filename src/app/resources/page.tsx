@@ -7,6 +7,7 @@ import { FilterBar } from "@/components/resources/filter-bar";
 import { PaginationControls } from "@/components/resources/pagination-controls";
 import { SearchBar } from "@/components/resources/search-bar";
 import { HeroParticles } from "@/components/resources/hero-particles";
+import { SuggestResourceDialog } from "@/components/resources/suggest-dialog";
 import Link from "next/link";
 
 export default async function ResourcesPage({
@@ -70,25 +71,28 @@ export default async function ResourcesPage({
             </p>
           </div>
 
-          {/* Search bar + Favorites */}
-          <div className="mx-auto mt-8 flex max-w-xl items-center justify-center gap-3 pb-6">
-            <div className="w-full">
-              <Suspense>
-                <SearchBar />
-              </Suspense>
-            </div>
-            {user && (
+          {/* Search bar */}
+          <div className="mx-auto mt-8 max-w-xl">
+            <Suspense>
+              <SearchBar />
+            </Suspense>
+          </div>
+
+          {/* Secondary actions — Favorites + Suggest under the search bar */}
+          {user && (
+            <div className="mx-auto mt-3 flex max-w-xl items-center justify-center gap-2 pb-6">
               <Link
                 href="/resources/favorites"
-                className="flex h-11 shrink-0 items-center gap-2 rounded-lg border border-border/50 bg-card/50 px-4 text-sm font-medium text-muted-foreground backdrop-blur-sm transition-colors hover:bg-card hover:text-foreground"
+                className="flex h-10 items-center gap-2 rounded-lg border border-border/50 bg-card/50 px-4 text-sm font-medium text-muted-foreground backdrop-blur-sm transition-colors hover:bg-card hover:text-foreground"
               >
                 <svg className="h-4 w-4 text-red-500" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                 </svg>
-                <span className="hidden sm:inline">Favorites</span>
+                Favorites
               </Link>
-            )}
-          </div>
+              <SuggestResourceDialog />
+            </div>
+          )}
         </div>
 
         {/* Layered waves — theme-aware fills */}
