@@ -92,12 +92,9 @@ export function FilterBar() {
     router.push(`/resources?${params.toString()}`);
   };
 
-  const clearAll = () => {
+  const clearFilters = () => {
     setPendingTags([]);
     setPendingSources([]);
-  };
-
-  const clearFilters = () => {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("tags");
     params.delete("sources");
@@ -108,7 +105,7 @@ export function FilterBar() {
   const pendingCount = pendingTags.length + pendingSources.length;
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <Sheet onOpenChange={(open) => open && resetPending()}>
         <SheetTrigger
           className={cn(
@@ -191,15 +188,19 @@ export function FilterBar() {
 
           <SheetFooter className="border-t border-border/50 pt-4">
             <div className="flex w-full items-center gap-2">
-              {pendingCount > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearAll}
-                  className="text-muted-foreground"
+              {(pendingCount > 0 || activeCount > 0) && (
+                <SheetClose
+                  render={
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearFilters}
+                      className="text-muted-foreground"
+                    />
+                  }
                 >
                   Clear all
-                </Button>
+                </SheetClose>
               )}
               <SheetClose
                 render={

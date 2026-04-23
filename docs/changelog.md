@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.5.9 — Resource Hub Filter Bug Fixes
+
+### Bug Fixes
+- Filter sheet "Clear all" button now actually clears filters and closes the sheet (previously only reset local pending state with no visible effect)
+- Active filter pills on mobile no longer overflow the viewport — FilterBar row now wraps
+
 ## v0.5.8 — Cloudflare Turnstile Bot Protection
 
 ### Security
