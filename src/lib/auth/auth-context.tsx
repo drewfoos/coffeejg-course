@@ -9,7 +9,12 @@ import {
 } from "react";
 import { onAuthStateChanged, signOut as firebaseSignOut, type User } from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
-import { setSessionCookie, clearSessionCookie } from "./session";
+import { clearSessionCookie } from "./session";
+import {
+  refreshSessionCookie,
+  shouldRefreshSession,
+  clearSessionMark,
+} from "./session-client";
 
 interface AuthContextValue {
   user: User | null;
@@ -32,9 +37,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(firebaseUser);
       setLoading(false);
 
-      if (firebaseUser) {
+      if (firebaseUser && shouldRefreshSession()) {
         const idToken = await firebaseUser.getIdToken();
-        await setSessionCookie(idToken);
+        await refreshSessionCookie(idToken);
       }
     });
 
@@ -44,6 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     await firebaseSignOut(auth);
     await clearSessionCookie();
+    clearSessionMark();
     setUser(null);
   };
 

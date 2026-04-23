@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/lib/auth/auth-context";
 import { useRouter } from "next/navigation";
+import { User } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,13 +22,6 @@ export function UserMenu({ userName, photoURL }: UserMenuProps) {
   const { signOut } = useAuth();
   const router = useRouter();
 
-  const initials = userName
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-
   const handleSignOut = async () => {
     await signOut();
     router.push("/");
@@ -38,8 +32,16 @@ export function UserMenu({ userName, photoURL }: UserMenuProps) {
     <DropdownMenu>
       <DropdownMenuTrigger className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary">
         <Avatar className="h-8 w-8 pointer-events-none">
-          {photoURL && <AvatarImage src={photoURL} alt={userName} />}
-          <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+          {photoURL && (
+            <AvatarImage
+              src={photoURL}
+              alt={userName}
+              referrerPolicy="no-referrer"
+            />
+          )}
+          <AvatarFallback className="bg-transparent text-muted-foreground">
+            <User className="h-5 w-5" />
+          </AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

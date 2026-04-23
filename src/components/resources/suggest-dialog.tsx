@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +19,47 @@ import { suggestResourceAction } from "@/lib/actions/suggest-resource";
 
 const ALLOWED_HOSTS_LABEL = "Ko-fi, Booth, VGen, Gumroad, Twitter/X, or itch.io";
 
-export function SuggestResourceDialog() {
+const SUGGEST_BUTTON_CLASSES =
+  "flex h-10 shrink-0 items-center gap-2 rounded-lg border border-border/50 bg-card/50 px-4 text-sm font-medium text-muted-foreground backdrop-blur-sm transition-colors hover:bg-card hover:text-foreground";
+
+function SuggestButtonContent() {
+  return (
+    <>
+      <svg
+        className="h-4 w-4 text-primary"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth={2}
+        stroke="currentColor"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M12 4.5v15m7.5-7.5h-15"
+        />
+      </svg>
+      Suggest
+    </>
+  );
+}
+
+export function SuggestResourceDialog({
+  isAuthenticated,
+}: {
+  isAuthenticated: boolean;
+}) {
+  if (!isAuthenticated) {
+    return (
+      <Link href="/login?next=/resources" className={SUGGEST_BUTTON_CLASSES}>
+        <SuggestButtonContent />
+      </Link>
+    );
+  }
+
+  return <AuthedSuggestDialog />;
+}
+
+function AuthedSuggestDialog() {
   const [open, setOpen] = useState(false);
   const [url, setUrl] = useState("");
   const [note, setNote] = useState("");
@@ -72,26 +113,10 @@ export function SuggestResourceDialog() {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger
         render={
-          <button
-            type="button"
-            className="flex h-10 shrink-0 items-center gap-2 rounded-lg border border-border/50 bg-card/50 px-4 text-sm font-medium text-muted-foreground backdrop-blur-sm transition-colors hover:bg-card hover:text-foreground"
-          />
+          <button type="button" className={SUGGEST_BUTTON_CLASSES} />
         }
       >
-        <svg
-          className="h-4 w-4 text-primary"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={2}
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M12 4.5v15m7.5-7.5h-15"
-          />
-        </svg>
-        Suggest
+        <SuggestButtonContent />
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-md">

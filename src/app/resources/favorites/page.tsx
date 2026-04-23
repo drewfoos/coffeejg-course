@@ -132,9 +132,14 @@ export default async function FavoritesPage() {
               </p>
             </div>
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {orderedAssets.map((asset) =>
+              {orderedAssets.map((asset, i) =>
                 asset ? (
-                  <AssetCard key={asset.id} asset={asset} isFavorited={true} />
+                  <AssetCard
+                    key={asset.id}
+                    asset={asset}
+                    isFavorited={true}
+                    priority={i < 4}
+                  />
                 ) : null
               )}
             </div>

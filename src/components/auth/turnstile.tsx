@@ -25,9 +25,12 @@ export function Turnstile({ onVerify, onExpire, onError }: TurnstileProps) {
   const onVerifyRef = useRef(onVerify);
   const onExpireRef = useRef(onExpire);
   const onErrorRef = useRef(onError);
-  onVerifyRef.current = onVerify;
-  onExpireRef.current = onExpire;
-  onErrorRef.current = onError;
+
+  useEffect(() => {
+    onVerifyRef.current = onVerify;
+    onExpireRef.current = onExpire;
+    onErrorRef.current = onError;
+  });
 
   const renderWidget = useCallback(() => {
     if (

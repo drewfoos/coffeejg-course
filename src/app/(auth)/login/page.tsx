@@ -5,7 +5,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/firebase/client";
-import { setSessionCookie } from "@/lib/auth/session";
+import { refreshSessionCookie } from "@/lib/auth/session-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,7 +42,7 @@ export default function LoginPage() {
         password
       );
       const idToken = await credential.user.getIdToken();
-      await setSessionCookie(idToken, turnstileToken);
+      await refreshSessionCookie(idToken, turnstileToken);
       router.push(redirectTo);
     } catch (err) {
       const message =

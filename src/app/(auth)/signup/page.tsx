@@ -8,7 +8,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/firebase/client";
-import { setSessionCookie } from "@/lib/auth/session";
+import { refreshSessionCookie } from "@/lib/auth/session-client";
 import { createUserDocIfNotExists } from "@/lib/auth/create-user-doc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,7 +48,7 @@ export default function SignupPage() {
       );
       await updateProfile(credential.user, { displayName: name });
       const idToken = await credential.user.getIdToken();
-      await setSessionCookie(idToken, turnstileToken);
+      await refreshSessionCookie(idToken, turnstileToken);
       await createUserDocIfNotExists(idToken, "email");
       router.push(redirectTo);
     } catch (err) {

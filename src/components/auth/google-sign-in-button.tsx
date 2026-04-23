@@ -4,7 +4,7 @@ import { useState } from "react";
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase/client";
-import { setSessionCookie } from "@/lib/auth/session";
+import { refreshSessionCookie } from "@/lib/auth/session-client";
 import { createUserDocIfNotExists } from "@/lib/auth/create-user-doc";
 import { Button } from "@/components/ui/button";
 
@@ -22,7 +22,7 @@ export function GoogleSignInButton({ redirectTo }: GoogleSignInButtonProps) {
       const provider = new GoogleAuthProvider();
       const credential = await signInWithPopup(auth, provider);
       const idToken = await credential.user.getIdToken();
-      await setSessionCookie(idToken);
+      await refreshSessionCookie(idToken);
       await createUserDocIfNotExists(idToken, "google");
       router.push(redirectTo || "/");
     } catch {

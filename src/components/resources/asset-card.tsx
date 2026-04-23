@@ -12,9 +12,10 @@ const MAX_VISIBLE_TAGS = 2;
 interface AssetCardProps {
   asset: AssetWithId;
   isFavorited: boolean;
+  priority?: boolean;
 }
 
-export function AssetCard({ asset, isFavorited }: AssetCardProps) {
+export function AssetCard({ asset, isFavorited, priority = false }: AssetCardProps) {
   const [modalOpen, setModalOpen] = useState(false);
 
   const visibleTags = asset.tags.slice(0, MAX_VISIBLE_TAGS);
@@ -36,6 +37,7 @@ export function AssetCard({ asset, isFavorited }: AssetCardProps) {
               sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className="object-cover transition-transform duration-300 group-hover:scale-105"
               unoptimized
+              priority={priority}
             />
           ) : (
             <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-primary/[0.08] via-muted to-primary/[0.04]">
