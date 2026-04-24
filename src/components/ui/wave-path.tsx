@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 
 type WWavePathProps = React.ComponentProps<'div'>;
 
@@ -12,7 +12,7 @@ export function WavePath({ className, ...props }: WWavePathProps) {
     const timeRef = useRef(Math.PI / 2);
     const reqIdRef = useRef<number | null>(null);
 
-    function setPath(progress: number) {
+    const setPath = useCallback((progress: number) => {
         const width = window.innerWidth * 0.7;
         if (path.current) {
             path.current.setAttributeNS(
@@ -21,12 +21,11 @@ export function WavePath({ className, ...props }: WWavePathProps) {
                 `M0 100 Q${width * xRef.current} ${100 + progress * 0.6}, ${width} 100`,
             );
         }
-    }
+    }, []);
 
     useEffect(() => {
         setPath(progressRef.current);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [setPath]);
 
     const lerp = (x: number, y: number, a: number) => x * (1 - a) + y * a;
 

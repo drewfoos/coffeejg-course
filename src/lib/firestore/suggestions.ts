@@ -42,6 +42,8 @@ export interface CreateSuggestionResult {
   created: boolean;
   /** When `created` is false, the uid of the user who already submitted this URL. */
   existingUserId?: string;
+  /** When `created` is false, the status of the existing suggestion. */
+  existingStatus?: Suggestion["status"];
 }
 
 /**
@@ -58,24 +60,32 @@ export async function createSuggestion(
   const ref = adminDb.collection("suggestions").doc(docId);
 
   try {
-    await ref.create({
+    const doc: Record<string, unknown> = {
       userId: input.userId,
       userEmail: input.userEmail,
+      title: input.title,
+      artistName: input.artistName,
+      description: input.description,
+      imageUrl: input.imageUrl,
       externalUrl: input.externalUrl,
       source: input.source,
-      note: input.note,
       status: input.status ?? "new",
       createdAt: FieldValue.serverTimestamp(),
-    });
+    };
+    if (input.tags && input.tags.length > 0) doc.tags = input.tags;
+    await ref.create(doc);
     return { created: true };
   } catch (err) {
     // Firestore GRPC code 6 = ALREADY_EXISTS
     const code = (err as { code?: number | string }).code;
     if (code === 6 || code === "already-exists") {
       const existing = await ref.get();
-      const existingUserId =
-        (existing.data() as Suggestion | undefined)?.userId ?? undefined;
-      return { created: false, existingUserId };
+      const data = existing.data() as Suggestion | undefined;
+      return {
+        created: false,
+        existingUserId: data?.userId,
+        existingStatus: data?.status,
+      };
     }
     throw err;
   }

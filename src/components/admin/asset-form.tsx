@@ -9,9 +9,13 @@ import { cn } from "@/lib/utils";
 interface AssetFormProps {
   suggestionId?: string;
   defaults?: {
+    title?: string;
+    artistName?: string;
+    description?: string;
+    imageUrl?: string;
     externalUrl?: string;
     source?: string;
-    note?: string;
+    tags?: string[];
   };
 }
 
@@ -20,16 +24,16 @@ export function AssetForm({ suggestionId, defaults }: AssetFormProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  const [title, setTitle] = useState("");
-  const [artistName, setArtistName] = useState("");
-  const [description, setDescription] = useState(defaults?.note ?? "");
-  const [imageUrl, setImageUrl] = useState("");
+  const [title, setTitle] = useState(defaults?.title ?? "");
+  const [artistName, setArtistName] = useState(defaults?.artistName ?? "");
+  const [description, setDescription] = useState(defaults?.description ?? "");
+  const [imageUrl, setImageUrl] = useState(defaults?.imageUrl ?? "");
   const [externalUrl, setExternalUrl] = useState(defaults?.externalUrl ?? "");
   const [source, setSource] = useState<string>(
     defaults?.source ?? RESOURCE_SOURCES[0]
   );
   const [free, setFree] = useState(true);
-  const [tags, setTags] = useState<string[]>([]);
+  const [tags, setTags] = useState<string[]>(defaults?.tags ?? []);
 
   const toggleTag = (tag: string) =>
     setTags((prev) =>
@@ -69,7 +73,15 @@ export function AssetForm({ suggestionId, defaults }: AssetFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-2xl space-y-5">
+    <form
+      onSubmit={handleSubmit}
+      className="max-w-2xl"
+      aria-busy={isPending}
+    >
+      <fieldset
+        disabled={isPending}
+        className="space-y-5 border-0 p-0 m-0 min-w-0 disabled:opacity-70"
+      >
       <div>
         <label className="text-sm font-medium">
           Title <span className="text-red-500">*</span>
@@ -99,17 +111,20 @@ export function AssetForm({ suggestionId, defaults }: AssetFormProps) {
       </div>
 
       <div>
-        <label className="text-sm font-medium">Description</label>
+        <label className="text-sm font-medium">
+          Description <span className="text-red-500">*</span>
+        </label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
+          required
           rows={3}
           maxLength={2000}
           className="mt-1.5 block w-full rounded-md border border-border/50 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
         />
-        {suggestionId && defaults?.note && (
+        {suggestionId && defaults?.description && (
           <p className="mt-1 text-xs text-muted-foreground">
-            Prefilled from the user&apos;s suggestion note.
+            Prefilled from the user&apos;s suggestion.
           </p>
         )}
       </div>
@@ -127,6 +142,11 @@ export function AssetForm({ suggestionId, defaults }: AssetFormProps) {
           placeholder="https://..."
           className="mt-1.5 block w-full rounded-md border border-border/50 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
         />
+        {suggestionId && defaults?.imageUrl && (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Prefilled from the user&apos;s suggestion.
+          </p>
+        )}
       </div>
 
       <div>
@@ -206,8 +226,24 @@ export function AssetForm({ suggestionId, defaults }: AssetFormProps) {
       </div>
 
       {error && (
-        <div className="rounded-md border border-red-500/30 bg-red-500/5 px-4 py-3 text-sm text-red-500">
-          {error}
+        <div
+          role="alert"
+          className="flex items-start gap-2 rounded-md border border-red-500/30 bg-red-500/5 px-4 py-3 text-sm text-red-500"
+        >
+          <svg
+            className="mt-0.5 h-4 w-4 shrink-0"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={2}
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 9v3.75m0-10.5a9 9 0 100 18 9 9 0 000-18zm0 14.25h.008v.008H12v-.008z"
+            />
+          </svg>
+          <span>{error}</span>
         </div>
       )}
 
@@ -215,8 +251,11 @@ export function AssetForm({ suggestionId, defaults }: AssetFormProps) {
         <button
           type="submit"
           disabled={isPending}
-          className="rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
         >
+          {isPending && (
+            <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          )}
           {isPending
             ? "Saving..."
             : suggestionId
@@ -226,11 +265,12 @@ export function AssetForm({ suggestionId, defaults }: AssetFormProps) {
         <button
           type="button"
           onClick={() => router.back()}
-          className="rounded-md border border-border/50 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-accent"
+          className="rounded-md border border-border/50 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
         >
           Cancel
         </button>
       </div>
+      </fieldset>
     </form>
   );
 }

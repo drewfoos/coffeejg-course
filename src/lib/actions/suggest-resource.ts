@@ -5,26 +5,42 @@ import { getCurrentUser } from "@/lib/auth/get-current-user";
 import { verifyTurnstileToken } from "@/lib/auth/verify-turnstile";
 import { suggestionLimiter } from "@/lib/rate-limit";
 import { normalizeResourceUrl } from "@/lib/resource-url";
+import { RESOURCE_TAGS } from "@/lib/resource-taxonomy";
+import { isUrlReachable, isImageUrlReachable } from "@/lib/url-liveness";
 import {
   assetExistsWithUrl,
   countUserSuggestionsLast24h,
   createSuggestion,
 } from "@/lib/firestore/suggestions";
 
+const MAX_TITLE_LENGTH = 200;
+const MAX_ARTIST_LENGTH = 200;
 const MAX_URL_LENGTH = 500;
-const MAX_NOTE_LENGTH = 500;
+const MAX_DESCRIPTION_LENGTH = 2000;
+const MAX_IMAGE_URL_LENGTH = 1000;
+const MAX_TAGS = 20;
 const DAILY_CAP = 5;
 const MIN_ACCOUNT_AGE_MS = 24 * 60 * 60 * 1000;
+
+const ALLOWED_TAG_SET: Set<string> = new Set(RESOURCE_TAGS);
 
 export interface SuggestResult {
   ok: boolean;
   error?: string;
 }
 
+export interface SuggestInput {
+  url: string;
+  title: string;
+  artistName: string;
+  description: string;
+  imageUrl: string;
+  tags?: string[];
+  turnstileToken: string;
+}
+
 export async function suggestResourceAction(
-  rawUrl: string,
-  rawNote: string,
-  turnstileToken: string
+  input: SuggestInput
 ): Promise<SuggestResult> {
   const user = await getCurrentUser();
   if (!user) {
@@ -36,7 +52,7 @@ export async function suggestResourceAction(
     return { ok: false, error: "Too many requests. Please slow down." };
   }
 
-  const turnstileOk = await verifyTurnstileToken(turnstileToken);
+  const turnstileOk = await verifyTurnstileToken(input.turnstileToken);
   if (!turnstileOk) {
     return { ok: false, error: "Security verification failed. Please try again." };
   }
@@ -58,17 +74,42 @@ export async function suggestResourceAction(
     return { ok: false, error: "Could not verify your account. Please try again." };
   }
 
-  const urlInput = (rawUrl ?? "").trim();
-  const noteInput = (rawNote ?? "").trim();
+  const urlInput = (input.url ?? "").trim();
+  const titleInput = (input.title ?? "").trim();
+  const artistInput = (input.artistName ?? "").trim();
+  const descriptionInput = (input.description ?? "").trim();
+  const imageUrlInput = (input.imageUrl ?? "").trim();
+  const rawTags = Array.isArray(input.tags) ? input.tags : [];
 
+  if (titleInput.length === 0) {
+    return { ok: false, error: "Please enter a title." };
+  }
+  if (titleInput.length > MAX_TITLE_LENGTH) {
+    return { ok: false, error: "Title is too long." };
+  }
+  if (artistInput.length === 0) {
+    return { ok: false, error: "Please enter the artist's name." };
+  }
+  if (artistInput.length > MAX_ARTIST_LENGTH) {
+    return { ok: false, error: "Artist name is too long." };
+  }
+  if (descriptionInput.length === 0) {
+    return { ok: false, error: "Please enter a description." };
+  }
+  if (descriptionInput.length > MAX_DESCRIPTION_LENGTH) {
+    return { ok: false, error: "Description is too long." };
+  }
   if (urlInput.length === 0) {
     return { ok: false, error: "Please enter a URL." };
   }
   if (urlInput.length > MAX_URL_LENGTH) {
     return { ok: false, error: "URL is too long." };
   }
-  if (noteInput.length > MAX_NOTE_LENGTH) {
-    return { ok: false, error: "Note is too long (max 500 characters)." };
+  if (imageUrlInput.length === 0) {
+    return { ok: false, error: "Please enter an image URL." };
+  }
+  if (imageUrlInput.length > MAX_IMAGE_URL_LENGTH) {
+    return { ok: false, error: "Image URL is too long." };
   }
 
   const normalized = normalizeResourceUrl(urlInput);
@@ -79,6 +120,26 @@ export async function suggestResourceAction(
         "URL must be a direct link to a resource on Ko-fi, Booth, VGen, Gumroad, Twitter/X, or itch.io.",
     };
   }
+
+  // Image URL: validate shape.
+  let parsedImage: URL;
+  try {
+    parsedImage = new URL(imageUrlInput);
+  } catch {
+    return { ok: false, error: "Image URL isn't a valid link." };
+  }
+  if (parsedImage.protocol !== "https:" && parsedImage.protocol !== "http:") {
+    return { ok: false, error: "Image URL must be an http(s) link." };
+  }
+
+  // Tags: drop anything not on the allowlist, de-dup, cap count.
+  const tags = Array.from(
+    new Set(
+      rawTags
+        .map((t) => (typeof t === "string" ? t.trim() : ""))
+        .filter((t) => ALLOWED_TAG_SET.has(t))
+    )
+  ).slice(0, MAX_TAGS);
 
   // Firestore-backed daily cap (distributed, survives instance reuse)
   const recentCount = await countUserSuggestionsLast24h(user.uid);
@@ -94,18 +155,56 @@ export async function suggestResourceAction(
     return { ok: false, error: "This resource is already in the Resource Hub." };
   }
 
+  // Liveness checks — run in parallel to keep latency low.
+  const [urlOk, imageOk] = await Promise.all([
+    isUrlReachable(normalized.url),
+    isImageUrlReachable(imageUrlInput),
+  ]);
+  if (!urlOk) {
+    return {
+      ok: false,
+      error: "That link returned an error. Please double-check the URL.",
+    };
+  }
+  if (!imageOk) {
+    return {
+      ok: false,
+      error: "The image URL didn't load or isn't an image.",
+    };
+  }
+
   // Atomic create — same URL by the same user is a no-op (idempotent).
   // Same URL by a different user is rejected as a duplicate.
   const result = await createSuggestion({
     userId: user.uid,
     userEmail: user.email,
+    title: titleInput,
+    artistName: artistInput,
+    description: descriptionInput,
+    imageUrl: imageUrlInput,
     externalUrl: normalized.url,
     source: normalized.source,
-    note: noteInput,
+    tags,
   });
 
-  if (!result.created && result.existingUserId !== user.uid) {
-    return { ok: false, error: "This resource has already been suggested." };
+  if (!result.created) {
+    // Status-aware dedup messaging.
+    if (result.existingStatus === "rejected") {
+      return {
+        ok: false,
+        error: "This link was previously reviewed and not added to the hub.",
+      };
+    }
+    if (result.existingStatus === "imported") {
+      return {
+        ok: false,
+        error: "This resource is already in the Resource Hub.",
+      };
+    }
+    if (result.existingUserId !== user.uid) {
+      return { ok: false, error: "This link has already been suggested." };
+    }
+    // Same user, status "new" — quiet idempotent success.
   }
 
   return { ok: true };

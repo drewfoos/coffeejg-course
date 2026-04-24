@@ -12,9 +12,13 @@ export default async function NewAssetPage({
   const suggestion = suggestionId ? await getSuggestion(suggestionId) : null;
   const defaults = suggestion
     ? {
+        title: suggestion.title,
+        artistName: suggestion.artistName,
+        description: suggestion.description,
+        imageUrl: suggestion.imageUrl,
         externalUrl: suggestion.externalUrl,
         source: suggestion.source,
-        note: suggestion.note,
+        tags: suggestion.tags ?? [],
       }
     : undefined;
 

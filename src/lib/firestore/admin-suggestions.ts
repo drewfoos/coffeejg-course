@@ -26,6 +26,21 @@ export async function listSuggestions(options: {
   );
 }
 
+/**
+ * Lightweight count using Firestore's aggregation query. Cheaper than
+ * reading docs — good fit for populating tab badges.
+ */
+export async function countSuggestions(
+  status?: Suggestion["status"]
+): Promise<number> {
+  let query: FirebaseFirestore.Query = adminDb.collection("suggestions");
+  if (status) {
+    query = query.where("status", "==", status);
+  }
+  const snap = await query.count().get();
+  return snap.data().count;
+}
+
 export async function getSuggestion(
   id: string
 ): Promise<SuggestionWithId | null> {

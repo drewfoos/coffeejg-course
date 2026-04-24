@@ -112,9 +112,13 @@ export interface Favorite {
 export interface Suggestion {
   userId: string;
   userEmail: string;
+  title: string;
+  artistName: string;
+  description: string;
+  imageUrl: string;
   externalUrl: string;
   source: string;
-  note: string;
+  tags?: string[];
   status: "new" | "approved" | "rejected" | "imported";
   createdAt: string;
   reviewedAt?: string;

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,8 +16,25 @@ import {
 } from "@/components/ui/dialog";
 import { Turnstile } from "@/components/auth/turnstile";
 import { suggestResourceAction } from "@/lib/actions/suggest-resource";
+import { normalizeResourceUrl } from "@/lib/resource-url";
+import { RESOURCE_TAGS } from "@/lib/resource-taxonomy";
+import { cn } from "@/lib/utils";
 
 const ALLOWED_HOSTS_LABEL = "Ko-fi, Booth, VGen, Gumroad, Twitter/X, or itch.io";
+
+function validateImageUrlShape(input: string): string | null {
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+      return "Must be an http(s) link.";
+    }
+    return null;
+  } catch {
+    return "Not a valid URL.";
+  }
+}
 
 const SUGGEST_BUTTON_CLASSES =
   "flex h-10 shrink-0 items-center gap-2 rounded-lg border border-border/50 bg-card/50 px-4 text-sm font-medium text-muted-foreground backdrop-blur-sm transition-colors hover:bg-card hover:text-foreground";
@@ -61,20 +78,51 @@ export function SuggestResourceDialog({
 
 function AuthedSuggestDialog() {
   const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const [artistName, setArtistName] = useState("");
+  const [description, setDescription] = useState("");
   const [url, setUrl] = useState("");
-  const [note, setNote] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
   const [turnstileToken, setTurnstileToken] = useState("");
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const trimmedUrl = url.trim();
+  const normalized = useMemo(
+    () => (trimmedUrl ? normalizeResourceUrl(trimmedUrl) : null),
+    [trimmedUrl]
+  );
+  const urlIsInvalid = trimmedUrl.length > 0 && normalized === null;
+  const imageUrlError = useMemo(() => validateImageUrlShape(imageUrl), [imageUrl]);
+
+  const canSubmit =
+    !loading &&
+    title.trim().length > 0 &&
+    artistName.trim().length > 0 &&
+    description.trim().length > 0 &&
+    !!normalized &&
+    imageUrl.trim().length > 0 &&
+    !imageUrlError;
+
   const handleVerify = useCallback((token: string) => {
     setTurnstileToken(token);
   }, []);
 
+  const toggleTag = (tag: string) => {
+    setTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
+
   const reset = () => {
+    setTitle("");
+    setArtistName("");
+    setDescription("");
     setUrl("");
-    setNote("");
+    setImageUrl("");
+    setTags([]);
     setError("");
     setSent(false);
     setLoading(false);
@@ -96,7 +144,15 @@ function AuthedSuggestDialog() {
     setLoading(true);
 
     try {
-      const result = await suggestResourceAction(url, note, turnstileToken);
+      const result = await suggestResourceAction({
+        url,
+        title,
+        artistName,
+        description,
+        imageUrl,
+        tags,
+        turnstileToken,
+      });
       if (!result.ok) {
         setError(result.error ?? "Something went wrong. Please try again.");
         setLoading(false);
@@ -119,7 +175,7 @@ function AuthedSuggestDialog() {
         <SuggestButtonContent />
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-thin pr-5">
         {sent ? (
           <div className="py-4 text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
@@ -153,11 +209,64 @@ function AuthedSuggestDialog() {
             <DialogHeader>
               <DialogTitle>Suggest a resource</DialogTitle>
               <DialogDescription>
-                Drop a link and we&apos;ll review it for the hub.
+                Fill in the details and we&apos;ll review it for the hub.
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-4"
+              aria-busy={loading}
+            >
+              <div className="space-y-1.5">
+                <Label htmlFor="suggest-title">Title</Label>
+                <Input
+                  id="suggest-title"
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. Neon cyberpunk overlay pack"
+                  required
+                  maxLength={200}
+                  autoComplete="off"
+                  disabled={loading}
+                  className="h-10"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="suggest-artist">Artist / creator name</Label>
+                <Input
+                  id="suggest-artist"
+                  type="text"
+                  value={artistName}
+                  onChange={(e) => setArtistName(e.target.value)}
+                  placeholder="Who made it?"
+                  required
+                  maxLength={200}
+                  autoComplete="off"
+                  disabled={loading}
+                  className="h-10"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="suggest-description">Description</Label>
+                <Textarea
+                  id="suggest-description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="What is it? Why's it worth adding?"
+                  required
+                  rows={3}
+                  maxLength={2000}
+                  disabled={loading}
+                />
+                <p className="text-right text-xs text-muted-foreground">
+                  {description.length}/2000
+                </p>
+              </div>
+
               <div className="space-y-1.5">
                 <Label htmlFor="suggest-url">Resource URL</Label>
                 <Input
@@ -169,27 +278,90 @@ function AuthedSuggestDialog() {
                   required
                   maxLength={500}
                   autoComplete="off"
+                  aria-invalid={urlIsInvalid || undefined}
+                  disabled={loading}
                   className="h-10"
                 />
-                <p className="text-xs text-muted-foreground">
-                  Must be a link on {ALLOWED_HOSTS_LABEL}.
-                </p>
+                {normalized ? (
+                  <p className="flex items-center gap-1 text-xs text-primary">
+                    <svg
+                      className="h-3.5 w-3.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M4.5 12.75l6 6 9-13.5"
+                      />
+                    </svg>
+                    {normalized.source} link looks good
+                  </p>
+                ) : urlIsInvalid ? (
+                  <p className="text-xs text-destructive">
+                    Must be a link on {ALLOWED_HOSTS_LABEL}.
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Must be a link on {ALLOWED_HOSTS_LABEL}.
+                  </p>
+                )}
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="suggest-note">
-                  Note <span className="text-muted-foreground">(optional)</span>
-                </Label>
-                <Textarea
-                  id="suggest-note"
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder="Anything we should know?"
-                  rows={3}
-                  maxLength={500}
+                <Label htmlFor="suggest-image-url">Image URL</Label>
+                <Input
+                  id="suggest-image-url"
+                  type="url"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder="https://.../preview.png"
+                  required
+                  maxLength={1000}
+                  autoComplete="off"
+                  aria-invalid={!!imageUrlError || undefined}
+                  disabled={loading}
+                  className="h-10"
                 />
-                <p className="text-right text-xs text-muted-foreground">
-                  {note.length}/500
+                {imageUrlError ? (
+                  <p className="text-xs text-destructive">{imageUrlError}</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Direct link to a preview image.
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>
+                  Suggested tags{" "}
+                  <span className="text-muted-foreground">(optional)</span>
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {RESOURCE_TAGS.map((tag) => {
+                    const active = tags.includes(tag);
+                    return (
+                      <button
+                        type="button"
+                        key={tag}
+                        onClick={() => toggleTag(tag)}
+                        disabled={loading}
+                        className={cn(
+                          "rounded-full px-3 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60",
+                          active
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                        )}
+                      >
+                        {tag}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Pick any that apply — we&apos;ll use them as a starting point.
                 </p>
               </div>
 
@@ -199,17 +371,40 @@ function AuthedSuggestDialog() {
               />
 
               {error && (
-                <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-                  {error}
+                <div
+                  role="alert"
+                  className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive"
+                >
+                  <svg
+                    className="mt-0.5 h-4 w-4 shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 9v3.75m0-10.5a9 9 0 100 18 9 9 0 000-18zm0 14.25h.008v.008H12v-.008z"
+                    />
+                  </svg>
+                  <span>{error}</span>
                 </div>
               )}
 
               <Button
                 type="submit"
                 className="h-10 w-full text-sm font-medium"
-                disabled={loading}
+                disabled={!canSubmit}
               >
-                {loading ? "Submitting..." : "Submit suggestion"}
+                {loading ? (
+                  <span className="inline-flex items-center gap-2">
+                    <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    Submitting...
+                  </span>
+                ) : (
+                  "Submit suggestion"
+                )}
               </Button>
             </form>
           </>

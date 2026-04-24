@@ -55,6 +55,7 @@ function sanitizeInput(input: unknown): AssetInput {
   if (title.length > MAX_TITLE) throw new Error("Title is too long.");
   if (!artistName) throw new Error("Artist name is required.");
   if (artistName.length > MAX_ARTIST) throw new Error("Artist name is too long.");
+  if (!description) throw new Error("Description is required.");
   if (description.length > MAX_DESC) throw new Error("Description is too long.");
   if (!imageUrl) throw new Error("Image URL is required.");
   if (imageUrl.length > MAX_IMG) throw new Error("Image URL is too long.");
@@ -147,14 +148,26 @@ export async function reopenSuggestionAction(
 
 export async function getSuggestionForPrefill(
   suggestionId: string
-): Promise<{ externalUrl: string; source: string; note: string } | null> {
+): Promise<{
+  title: string;
+  artistName: string;
+  description: string;
+  imageUrl: string;
+  externalUrl: string;
+  source: string;
+  tags: string[];
+} | null> {
   await requireAdmin();
   validateId(suggestionId, "suggestion ID");
   const s = await getSuggestion(suggestionId);
   if (!s) return null;
   return {
+    title: s.title,
+    artistName: s.artistName,
+    description: s.description,
+    imageUrl: s.imageUrl,
     externalUrl: s.externalUrl,
     source: s.source,
-    note: s.note,
+    tags: s.tags ?? [],
   };
 }
