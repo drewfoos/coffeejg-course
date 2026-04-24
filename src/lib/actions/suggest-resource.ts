@@ -4,7 +4,11 @@ import { adminAuth } from "@/lib/firebase/admin";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
 import { verifyTurnstileToken } from "@/lib/auth/verify-turnstile";
 import { suggestionLimiter } from "@/lib/rate-limit";
-import { normalizeResourceUrl } from "@/lib/resource-url";
+import {
+  ALLOWED_IMAGE_HOSTS_LABEL,
+  isAllowedImageHost,
+  normalizeResourceUrl,
+} from "@/lib/resource-url";
 import { RESOURCE_TAGS } from "@/lib/resource-taxonomy";
 import { isUrlReachable, isImageUrlReachable } from "@/lib/url-liveness";
 import {
@@ -121,7 +125,8 @@ export async function suggestResourceAction(
     };
   }
 
-  // Image URL: validate shape.
+  // Image URL: validate shape + allowlist the host so we don't end up showing
+  // arbitrary third-party images in the admin review UI.
   let parsedImage: URL;
   try {
     parsedImage = new URL(imageUrlInput);
@@ -130,6 +135,12 @@ export async function suggestResourceAction(
   }
   if (parsedImage.protocol !== "https:" && parsedImage.protocol !== "http:") {
     return { ok: false, error: "Image URL must be an http(s) link." };
+  }
+  if (!isAllowedImageHost(imageUrlInput)) {
+    return {
+      ok: false,
+      error: `Image must be hosted on ${ALLOWED_IMAGE_HOSTS_LABEL}.`,
+    };
   }
 
   // Tags: drop anything not on the allowlist, de-dup, cap count.

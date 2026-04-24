@@ -26,6 +26,53 @@ export const ALLOWED_SOURCES = [
   { host: "itch.io", name: "itch.io" },
 ] as const;
 
+/**
+ * Hosts we trust for user-submitted preview images. Covers:
+ *  - CDNs for the resource platforms themselves
+ *  - Social platforms where creators promote their work
+ *  - Popular general-purpose image hosts used in the VTuber space
+ * Matched the same way as ALLOWED_SOURCES (exact or subdomain).
+ */
+export const ALLOWED_IMAGE_HOSTS = [
+  // Resource platform CDNs
+  "ko-fi.com",
+  "storage.ko-fi.com",
+  "booth.pm",
+  "booth.pximg.net",
+  "pximg.net",
+  "gumroad.com",
+  "public-files.gumroad.com",
+  "vgen.co",
+  "itch.io",
+  "img.itch.zone",
+  // Social
+  "twimg.com",
+  // General-purpose image hosts
+  "imgur.com",
+  "discordapp.com",
+  "discordapp.net",
+  "githubusercontent.com",
+] as const;
+
+export const ALLOWED_IMAGE_HOSTS_LABEL =
+  "Ko-fi, Booth, Gumroad, VGen, itch.io, Twitter, Imgur, Discord, or GitHub";
+
+export function isAllowedImageHost(urlInput: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(urlInput.trim());
+  } catch {
+    return false;
+  }
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+    return false;
+  }
+  const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
+  return ALLOWED_IMAGE_HOSTS.some(
+    (allowed) => host === allowed || host.endsWith(`.${allowed}`)
+  );
+}
+
 export interface NormalizedUrl {
   url: string;
   source: string;

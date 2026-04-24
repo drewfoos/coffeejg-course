@@ -16,7 +16,11 @@ import {
 } from "@/components/ui/dialog";
 import { Turnstile } from "@/components/auth/turnstile";
 import { suggestResourceAction } from "@/lib/actions/suggest-resource";
-import { normalizeResourceUrl } from "@/lib/resource-url";
+import {
+  ALLOWED_IMAGE_HOSTS_LABEL,
+  isAllowedImageHost,
+  normalizeResourceUrl,
+} from "@/lib/resource-url";
 import { RESOURCE_TAGS } from "@/lib/resource-taxonomy";
 import { cn } from "@/lib/utils";
 
@@ -25,15 +29,19 @@ const ALLOWED_HOSTS_LABEL = "Ko-fi, Booth, VGen, Gumroad, Twitter/X, or itch.io"
 function validateImageUrlShape(input: string): string | null {
   const trimmed = input.trim();
   if (!trimmed) return null;
+  let parsed: URL;
   try {
-    const parsed = new URL(trimmed);
-    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
-      return "Must be an http(s) link.";
-    }
-    return null;
+    parsed = new URL(trimmed);
   } catch {
     return "Not a valid URL.";
   }
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+    return "Must be an http(s) link.";
+  }
+  if (!isAllowedImageHost(trimmed)) {
+    return `Image must be hosted on ${ALLOWED_IMAGE_HOSTS_LABEL}.`;
+  }
+  return null;
 }
 
 const SUGGEST_BUTTON_CLASSES =
@@ -329,7 +337,7 @@ function AuthedSuggestDialog() {
                   <p className="text-xs text-destructive">{imageUrlError}</p>
                 ) : (
                   <p className="text-xs text-muted-foreground">
-                    Direct link to a preview image.
+                    Direct image link from {ALLOWED_IMAGE_HOSTS_LABEL}.
                   </p>
                 )}
               </div>
