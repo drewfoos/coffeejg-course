@@ -29,11 +29,11 @@ const ALLOWED_SOURCE_NAMES: Set<string> = new Set(
 function validateImageUrl(url: string) {
   try {
     const parsed = new URL(url);
-    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+    if (parsed.protocol !== "https:") {
       throw new Error();
     }
   } catch {
-    throw new Error("Image URL must be a valid http(s) URL.");
+    throw new Error("Image URL must be a valid https URL.");
   }
 }
 

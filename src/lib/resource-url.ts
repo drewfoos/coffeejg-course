@@ -64,7 +64,7 @@ export function isAllowedImageHost(urlInput: string): boolean {
   } catch {
     return false;
   }
-  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+  if (parsed.protocol !== "https:") {
     return false;
   }
   const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
@@ -91,7 +91,7 @@ export function normalizeResourceUrl(input: string): NormalizedUrl | null {
     return null;
   }
 
-  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+  if (parsed.protocol !== "https:") {
     return null;
   }
 

@@ -19,8 +19,8 @@ function validateImageUrlShape(input: string): string | null {
   } catch {
     return "Not a valid URL.";
   }
-  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
-    return "Must be an http(s) link.";
+  if (parsed.protocol !== "https:") {
+    return "Must be an https link.";
   }
   return null;
 }

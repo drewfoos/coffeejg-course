@@ -25,7 +25,10 @@ async function fetchWithTimeout(
     return await fetch(url, {
       ...init,
       signal: controller.signal,
-      redirect: "follow",
+      // SSRF guard: don't follow 3xx — an open-redirect on an allowlisted host
+      // would let a submitted URL reach internal IPs (e.g. 169.254.169.254).
+      // 3xx responses are handled explicitly by callers.
+      redirect: "manual",
       headers: { "User-Agent": USER_AGENT, ...init.headers },
     });
   } finally {
@@ -79,8 +82,21 @@ export async function isImageUrlReachable(
       return { ok: false, reason: "gone" };
     }
 
+    // Direct CDN image URLs should return 200. A 3xx means the target is
+    // somewhere else — we can't verify its content-type/size without following,
+    // and following would re-open the SSRF path. Reject.
+    if (res.status >= 300 && res.status < 400) {
+      return { ok: false, reason: "not-image" };
+    }
+
     const contentType = res.headers.get("content-type") ?? "";
-    if (contentType && !contentType.toLowerCase().startsWith("image/")) {
+    const lowerType = contentType.toLowerCase();
+    if (lowerType && !lowerType.startsWith("image/")) {
+      return { ok: false, reason: "not-image" };
+    }
+    // SVG can embed scripts; an admin opening the raw URL in a new tab would
+    // execute them. Reject even though it's technically image/*.
+    if (lowerType.startsWith("image/svg")) {
       return { ok: false, reason: "not-image" };
     }
 

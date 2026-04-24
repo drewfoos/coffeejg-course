@@ -137,8 +137,8 @@ export async function suggestResourceAction(
   } catch {
     return { ok: false, error: "Image URL isn't a valid link." };
   }
-  if (parsedImage.protocol !== "https:" && parsedImage.protocol !== "http:") {
-    return { ok: false, error: "Image URL must be an http(s) link." };
+  if (parsedImage.protocol !== "https:") {
+    return { ok: false, error: "Image URL must be an https link." };
   }
   if (!isAllowedImageHost(imageUrlInput)) {
     return {
