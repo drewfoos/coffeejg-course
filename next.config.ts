@@ -9,14 +9,18 @@ const nextConfig: NextConfig = {
       { hostname: "asset.booth.pm" },
       { hostname: "storage.vgen.co" },
       { hostname: "public-files.gumroad.com" },
+      { hostname: "assets.gumroad.com" },
       { hostname: "img.itch.zone" },
+      { hostname: "static.itch.io" },
       { hostname: "pbs.twimg.com" },
+      { hostname: "video.twimg.com" },
       // General-purpose hosts creators use
       { hostname: "i.imgur.com" },
       { hostname: "cdn.discordapp.com" },
       { hostname: "media.discordapp.net" },
       { hostname: "raw.githubusercontent.com" },
       { hostname: "user-images.githubusercontent.com" },
+      { hostname: "avatars.githubusercontent.com" },
       // Admin-curated (not in user suggestion allowlist)
       { hostname: "storage.googleapis.com" },
       { hostname: "placehold.co" },
