@@ -50,6 +50,28 @@ export interface SuggestInput {
 export async function suggestResourceAction(
   input: SuggestInput
 ): Promise<SuggestResult> {
+  try {
+    return await suggestResourceActionInner(input);
+  } catch (err) {
+    // Without this wrapper, unexpected throws (missing Firestore index,
+    // transient network, etc.) become opaque 500s on the client. Log the
+    // real error for the server terminal and surface something the user
+    // can act on — dev includes the message, prod keeps it generic.
+    console.error("[suggestResourceAction] unexpected error:", err);
+    const detail =
+      process.env.NODE_ENV !== "production" && err instanceof Error
+        ? ` (${err.message})`
+        : "";
+    return {
+      ok: false,
+      error: `Unexpected server error. Please try again in a moment.${detail}`,
+    };
+  }
+}
+
+async function suggestResourceActionInner(
+  input: SuggestInput
+): Promise<SuggestResult> {
   const user = await getCurrentUser();
   if (!user) {
     return { ok: false, error: "You must be signed in to suggest a resource." };
