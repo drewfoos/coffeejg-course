@@ -337,7 +337,8 @@ function AuthedSuggestDialog() {
                   <p className="text-xs text-destructive">{imageUrlError}</p>
                 ) : (
                   <p className="text-xs text-muted-foreground">
-                    Direct image link from {ALLOWED_IMAGE_HOSTS_LABEL}.
+                    Direct image link from {ALLOWED_IMAGE_HOSTS_LABEL}. Max
+                    10 MB.
                   </p>
                 )}
               </div>

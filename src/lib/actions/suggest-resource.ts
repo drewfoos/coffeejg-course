@@ -10,7 +10,11 @@ import {
   normalizeResourceUrl,
 } from "@/lib/resource-url";
 import { RESOURCE_TAGS } from "@/lib/resource-taxonomy";
-import { isUrlReachable, isImageUrlReachable } from "@/lib/url-liveness";
+import {
+  MAX_IMAGE_BYTES,
+  isImageUrlReachable,
+  isUrlReachable,
+} from "@/lib/url-liveness";
 import {
   assetExistsWithUrl,
   countUserSuggestionsLast24h,
@@ -167,7 +171,7 @@ export async function suggestResourceAction(
   }
 
   // Liveness checks — run in parallel to keep latency low.
-  const [urlOk, imageOk] = await Promise.all([
+  const [urlOk, imageCheck] = await Promise.all([
     isUrlReachable(normalized.url),
     isImageUrlReachable(imageUrlInput),
   ]);
@@ -177,11 +181,15 @@ export async function suggestResourceAction(
       error: "That link returned an error. Please double-check the URL.",
     };
   }
-  if (!imageOk) {
-    return {
-      ok: false,
-      error: "The image URL didn't load or isn't an image.",
-    };
+  if (!imageCheck.ok) {
+    const maxMb = Math.round(MAX_IMAGE_BYTES / (1024 * 1024));
+    const message =
+      imageCheck.reason === "too-large"
+        ? `Image is too large. Please use one under ${maxMb} MB.`
+        : imageCheck.reason === "not-image"
+          ? "That URL doesn't point to an image."
+          : "The image URL didn't load or isn't an image.";
+    return { ok: false, error: message };
   }
 
   // Atomic create — same URL by the same user is a no-op (idempotent).

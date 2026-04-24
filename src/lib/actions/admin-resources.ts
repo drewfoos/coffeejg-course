@@ -12,6 +12,7 @@ import {
   updateSuggestionStatus,
 } from "@/lib/firestore/admin-suggestions";
 import { ALLOWED_SOURCES, normalizeResourceUrl } from "@/lib/resource-url";
+import { MAX_IMAGE_BYTES, isImageUrlReachable } from "@/lib/url-liveness";
 import { validateId } from "@/lib/validation";
 
 const MAX_TITLE = 200;
@@ -102,6 +103,21 @@ export async function createAssetAction(
 ): Promise<{ id: string }> {
   const user = await requireAdmin();
   const sanitized = sanitizeInput(input);
+
+  // Asset cards serve the original (unoptimized) image to every visitor, so
+  // even admin-created entries need to honor the size ceiling.
+  const imageCheck = await isImageUrlReachable(sanitized.imageUrl);
+  if (!imageCheck.ok) {
+    const maxMb = Math.round(MAX_IMAGE_BYTES / (1024 * 1024));
+    if (imageCheck.reason === "too-large") {
+      throw new Error(`Image is too large. Please use one under ${maxMb} MB.`);
+    }
+    if (imageCheck.reason === "not-image") {
+      throw new Error("That URL doesn't point to an image.");
+    }
+    throw new Error("The image URL didn't load or isn't an image.");
+  }
+
   const id = await createAsset(sanitized);
 
   if (suggestionId) {
