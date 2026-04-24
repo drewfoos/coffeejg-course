@@ -1,10 +1,29 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { RESOURCE_TAGS, RESOURCE_SOURCES } from "@/lib/resource-taxonomy";
 import { createAssetAction } from "@/lib/actions/admin-resources";
+import { normalizeResourceUrl } from "@/lib/resource-url";
 import { cn } from "@/lib/utils";
+
+const EXTERNAL_HOSTS_LABEL =
+  "Ko-fi, Booth, VGen, Gumroad, Twitter/X, or itch.io";
+
+function validateImageUrlShape(input: string): string | null {
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+  let parsed: URL;
+  try {
+    parsed = new URL(trimmed);
+  } catch {
+    return "Not a valid URL.";
+  }
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+    return "Must be an http(s) link.";
+  }
+  return null;
+}
 
 interface AssetFormProps {
   suggestionId?: string;
@@ -34,6 +53,28 @@ export function AssetForm({ suggestionId, defaults }: AssetFormProps) {
   );
   const [free, setFree] = useState(true);
   const [tags, setTags] = useState<string[]>(defaults?.tags ?? []);
+
+  const trimmedExternal = externalUrl.trim();
+  const normalizedExternal = useMemo(
+    () => (trimmedExternal ? normalizeResourceUrl(trimmedExternal) : null),
+    [trimmedExternal]
+  );
+  const externalIsInvalid =
+    trimmedExternal.length > 0 && normalizedExternal === null;
+  const imageUrlError = useMemo(
+    () => validateImageUrlShape(imageUrl),
+    [imageUrl]
+  );
+
+  const canSubmit =
+    !isPending &&
+    title.trim().length > 0 &&
+    artistName.trim().length > 0 &&
+    description.trim().length > 0 &&
+    !!normalizedExternal &&
+    imageUrl.trim().length > 0 &&
+    !imageUrlError &&
+    tags.length > 0;
 
   const toggleTag = (tag: string) =>
     setTags((prev) =>
@@ -140,11 +181,21 @@ export function AssetForm({ suggestionId, defaults }: AssetFormProps) {
           required
           maxLength={1000}
           placeholder="https://..."
-          className="mt-1.5 block w-full rounded-md border border-border/50 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+          aria-invalid={!!imageUrlError || undefined}
+          className="mt-1.5 block w-full rounded-md border border-border/50 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none aria-invalid:border-red-500/60"
         />
-        {suggestionId && defaults?.imageUrl && (
+        {imageUrlError ? (
+          <p className="mt-1 text-xs text-red-500">{imageUrlError}</p>
+        ) : suggestionId && defaults?.imageUrl ? (
           <p className="mt-1 text-xs text-muted-foreground">
             Prefilled from the user&apos;s suggestion.
+          </p>
+        ) : (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Must be a valid http(s) link. Host must be in{" "}
+            <code className="rounded bg-muted px-1">next.config.ts</code> for{" "}
+            <code className="rounded bg-muted px-1">next/image</code> to load
+            it.
           </p>
         )}
       </div>
@@ -160,11 +211,22 @@ export function AssetForm({ suggestionId, defaults }: AssetFormProps) {
           required
           maxLength={500}
           placeholder="https://ko-fi.com/..."
-          className="mt-1.5 block w-full rounded-md border border-border/50 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+          aria-invalid={externalIsInvalid || undefined}
+          className="mt-1.5 block w-full rounded-md border border-border/50 bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none aria-invalid:border-red-500/60"
         />
-        <p className="mt-1 text-xs text-muted-foreground">
-          Must be on an allowed platform (Ko-fi, Booth, VGen, Gumroad, Twitter/X, itch.io).
-        </p>
+        {normalizedExternal ? (
+          <p className="mt-1 text-xs text-primary">
+            {normalizedExternal.source} link looks good
+          </p>
+        ) : externalIsInvalid ? (
+          <p className="mt-1 text-xs text-red-500">
+            Must be a link on {EXTERNAL_HOSTS_LABEL}.
+          </p>
+        ) : (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Must be on an allowed platform ({EXTERNAL_HOSTS_LABEL}).
+          </p>
+        )}
       </div>
 
       <div>
@@ -250,7 +312,7 @@ export function AssetForm({ suggestionId, defaults }: AssetFormProps) {
       <div className="flex items-center gap-3">
         <button
           type="submit"
-          disabled={isPending}
+          disabled={!canSubmit}
           className="inline-flex items-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isPending && (

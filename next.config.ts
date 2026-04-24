@@ -3,19 +3,25 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
+      // Resource platform CDNs
       { hostname: "storage.ko-fi.com" },
       { hostname: "booth.pximg.net" },
       { hostname: "asset.booth.pm" },
       { hostname: "storage.vgen.co" },
-      { hostname: "i.imgur.com" },
-      { hostname: "pbs.twimg.com" },
-      { hostname: "storage.googleapis.com" },
       { hostname: "public-files.gumroad.com" },
+      { hostname: "img.itch.zone" },
+      { hostname: "pbs.twimg.com" },
+      // General-purpose hosts creators use
+      { hostname: "i.imgur.com" },
+      { hostname: "cdn.discordapp.com" },
+      { hostname: "media.discordapp.net" },
+      { hostname: "raw.githubusercontent.com" },
+      { hostname: "user-images.githubusercontent.com" },
+      // Admin-curated (not in user suggestion allowlist)
+      { hostname: "storage.googleapis.com" },
       { hostname: "placehold.co" },
       { hostname: "static.wixstatic.com" },
       { hostname: "cdn.picrew.me" },
-      { hostname: "img.itch.zone" },
-      { hostname: "discord.com" },
       { hostname: "vroid.com" },
       { hostname: "vtubergraphics.com" },
     ],
