@@ -34,6 +34,19 @@ const nextConfig: NextConfig = {
   // Remove X-Powered-By header (leaks Next.js version)
   poweredByHeader: false,
 
+  // Resources-first pivot: the Resource Hub lives at "/" and the course/Pro
+  // pages are hidden until the course launches. Temporary (307) redirects on
+  // purpose — browsers don't cache them, so un-hiding is just deleting these.
+  async redirects() {
+    return [
+      { source: "/resources", destination: "/", permanent: false },
+      { source: "/resources/favorites", destination: "/favorites", permanent: false },
+      { source: "/courses", destination: "/", permanent: false },
+      { source: "/courses/:path*", destination: "/", permanent: false },
+      { source: "/pro", destination: "/", permanent: false },
+    ];
+  },
+
   // Security headers
   async headers() {
     return [

@@ -10,11 +10,12 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 
+// Courses/Pro entries are hidden until the course launches — see the
+// redirects in next.config.ts.
 const links = [
-  { label: "Courses", href: "/courses" },
-  { label: "Resources", href: "/resources" },
+  { label: "Resources", href: "/" },
+  { label: "Favorites", href: "/favorites" },
   { label: "About", href: "/about" },
-  { label: "Pro", href: "/pro" },
 ];
 
 export function MobileNav() {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const protectedPaths = ["/resources/favorites", "/checkout", "/admin"];
+const protectedPaths = ["/favorites", "/checkout", "/admin"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -31,7 +31,7 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/resources/favorites",
+    "/favorites",
     "/checkout/:path*",
     "/login",
     "/signup",

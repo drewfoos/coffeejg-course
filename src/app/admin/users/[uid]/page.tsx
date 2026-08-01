@@ -4,12 +4,16 @@ import Link from "next/link";
 import { RevokeEnrollmentButton } from "@/components/admin/revoke-enrollment-button";
 import { CancelSubscriptionButton } from "@/components/admin/cancel-subscription-button";
 import { DeleteUserButton } from "@/components/admin/delete-user-button";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 export default async function AdminUserDetailPage({
   params,
 }: {
   params: Promise<{ uid: string }>;
 }) {
+  // Auth before any data access: the admin layout's redirect renders in
+  // parallel with this page, so it does NOT stop these Firestore reads.
+  await requireAdmin();
   const { uid } = await params;
   const [user, enrollments] = await Promise.all([
     getUserById(uid),

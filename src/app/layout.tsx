@@ -26,8 +26,9 @@ const quicksand = Quicksand({
 });
 
 export const metadata: Metadata = {
-  title: "CoffeeJG VTubing Course",
-  description: "Learn 3D VTubing with structured courses and resources.",
+  title: "CoffeeJG — Free VTubing Resources",
+  description:
+    "A curated library of free VTuber assets — models, overlays, emotes, and tools from creators across the VTubing community.",
 };
 
 export default function RootLayout({

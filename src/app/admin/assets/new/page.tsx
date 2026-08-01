@@ -1,12 +1,16 @@
 import Link from "next/link";
 import { AssetForm } from "@/components/admin/asset-form";
 import { getSuggestion } from "@/lib/firestore/admin-suggestions";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 export default async function NewAssetPage({
   searchParams,
 }: {
   searchParams: Promise<{ suggestion?: string }>;
 }) {
+  // Auth before any data access: the admin layout's redirect renders in
+  // parallel with this page, so it does NOT stop these Firestore reads.
+  await requireAdmin();
   const { suggestion: suggestionId } = await searchParams;
 
   const suggestion = suggestionId ? await getSuggestion(suggestionId) : null;

@@ -6,6 +6,7 @@ import {
 } from "@/lib/firestore/admin-suggestions";
 import { SuggestionActions } from "@/components/admin/suggestion-actions";
 import type { Suggestion } from "@/lib/types";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 type StatusFilter = Suggestion["status"] | "all";
 
@@ -35,6 +36,9 @@ export default async function AdminSuggestionsPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
+  // Auth before any data access: the admin layout's redirect renders in
+  // parallel with this page, so it does NOT stop these Firestore reads.
+  await requireAdmin();
   const { status } = await searchParams;
   const activeStatus = (STATUS_FILTERS.find((f) => f.value === status)?.value ??
     "new") as StatusFilter;

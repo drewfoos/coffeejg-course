@@ -49,7 +49,7 @@ export function UserMenu({ userName, photoURL }: UserMenuProps) {
           <p className="text-sm font-medium">{userName}</p>
         </div>
         <DropdownMenuSeparator />
-        <Link href="/resources/favorites">
+        <Link href="/favorites">
           <DropdownMenuItem>My Favorites</DropdownMenuItem>
         </Link>
         <Link href="/settings">

@@ -75,7 +75,7 @@ export function SuggestResourceDialog({
 }) {
   if (!isAuthenticated) {
     return (
-      <Link href="/login?next=/resources" className={SUGGEST_BUTTON_CLASSES}>
+      <Link href="/login?next=/" className={SUGGEST_BUTTON_CLASSES}>
         <SuggestButtonContent />
       </Link>
     );

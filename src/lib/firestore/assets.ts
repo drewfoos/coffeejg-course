@@ -43,7 +43,12 @@ const getAllAssets = unstable_cache(
     );
   },
   ["all-assets"],
-  { revalidate: 300, tags: [ASSETS_CACHE_TAG] }
+  // Admin mutations invalidate the tag directly (updateTag in
+  // admin-resources.ts), so the timer is only a safety net for out-of-band
+  // writes (e.g. seed scripts). Keep it long: each refresh reads the whole
+  // collection, so a 1h timer alone would cost ~16k reads/day of the 50k
+  // free-tier quota. Daily ≈ 666 reads/day.
+  { revalidate: 86400, tags: [ASSETS_CACHE_TAG] }
 );
 
 export async function getAssets(
