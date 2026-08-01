@@ -73,7 +73,7 @@ export default async function FavoritesPage() {
             {/* Back to resources */}
             <div className="mt-6">
               <Link
-                href="/resources"
+                href="/"
                 className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-card/50 px-5 py-2 text-sm font-medium text-muted-foreground backdrop-blur-sm transition-colors hover:bg-card hover:text-foreground"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -115,7 +115,7 @@ export default async function FavoritesPage() {
               Explore the Resource Hub and tap the heart on any asset to save it here for quick access.
             </p>
             <Link
-              href="/resources"
+              href="/"
               className="mt-6 inline-flex items-center gap-2 rounded-lg bg-red-500/10 px-5 py-2.5 text-sm font-medium text-red-500 transition-colors hover:bg-red-500/20"
             >
               Explore Resources

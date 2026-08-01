@@ -50,13 +50,10 @@ const socials = [
   { icon: DiscordIcon, href: "https://discord.gg/STGMCZVxUx", label: "Discord" },
 ];
 
-const courses = [
-  { label: "3D VTubing with Warudo", href: "/courses/3d-vtubing-with-warudo" },
-];
-
+// Course links hidden until the course launches — see redirects in next.config.ts
 const resources = [
-  { label: "Resource Hub", href: "/resources" },
-  { label: "Browse Courses", href: "/courses" },
+  { label: "Resource Hub", href: "/" },
+  { label: "My Favorites", href: "/favorites" },
   { label: "About", href: "/about" },
 ];
 
@@ -83,7 +80,7 @@ export function Footer() {
               CoffeeJG
             </span>
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground max-w-md">
-              Structured courses and curated resources to help you become a
+              Curated free assets and resources to help you become a
               professional 3D VTuber.
             </p>
           </div>
@@ -103,28 +100,8 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Link columns — 3-col on mobile, 4-col on lg */}
-        <div className="mt-6 grid grid-cols-3 gap-4 sm:gap-8 lg:grid-cols-4">
-          {/* Courses */}
-          <div>
-            <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-foreground">
-              Courses
-            </h4>
-            <ul className="space-y-2">
-              {courses.map(({ label, href }) => (
-                <li key={href}>
-                  <Link
-                    href={href}
-                    className="group flex items-center text-sm text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    <span className="mr-2 h-1 w-1 rounded-full bg-primary opacity-0 transition-opacity group-hover:opacity-100" />
-                    {label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
+        {/* Link columns */}
+        <div className="mt-6 grid grid-cols-2 gap-4 sm:gap-8 lg:grid-cols-3">
           {/* Resources */}
           <div>
             <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-foreground">
@@ -165,15 +142,6 @@ export function Footer() {
                   </a>
                 </li>
               ))}
-              <li>
-                <Link
-                  href="/pro"
-                  className="group flex items-center text-sm text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  <span className="mr-2 h-1 w-1 rounded-full bg-primary opacity-0 transition-opacity group-hover:opacity-100" />
-                  Get Pro Access
-                </Link>
-              </li>
             </ul>
           </div>
         </div>

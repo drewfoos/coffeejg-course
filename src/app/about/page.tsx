@@ -34,13 +34,8 @@ export default function AboutPage() {
               live with a full production setup.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3 md:justify-start">
-              <Link href="/courses">
-                <Button size="lg">Browse Courses</Button>
-              </Link>
-              <Link href="/resources">
-                <Button size="lg" variant="outline">
-                  Free Resources
-                </Button>
+              <Link href="/">
+                <Button size="lg">Browse Free Resources</Button>
               </Link>
             </div>
           </div>
@@ -76,12 +71,12 @@ export default function AboutPage() {
             <Card className="border-border/50 transition-shadow hover:shadow-lg">
               <CardContent className="p-6">
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-2xl">
-                  🎓
+                  🔎
                 </div>
-                <h3 className="text-lg font-bold">Structured Courses</h3>
+                <h3 className="text-lg font-bold">Easy to Search</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  Step-by-step video lessons that take you from zero to a fully
-                  set up 3D VTuber. No guesswork, no skipping around.
+                  Filter by tags and platform, search by creator or title, and
+                  save favorites so you never lose track of an asset.
                 </p>
               </CardContent>
             </Card>

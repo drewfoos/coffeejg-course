@@ -43,7 +43,9 @@ const getAllAssets = unstable_cache(
     );
   },
   ["all-assets"],
-  { revalidate: 300, tags: [ASSETS_CACHE_TAG] }
+  // Assets change rarely and admin mutations invalidate the tag directly,
+  // so a long window costs nothing in freshness.
+  { revalidate: 3600, tags: [ASSETS_CACHE_TAG] }
 );
 
 export async function getAssets(

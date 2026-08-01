@@ -1,153 +1,160 @@
+import { Suspense } from "react";
+import { getAssets } from "@/lib/firestore/assets";
+import { getFavoriteIds } from "@/lib/firestore/favorites";
+import { getCurrentUser } from "@/lib/auth/get-current-user";
+import { AssetCard } from "@/components/resources/asset-card";
+import { FilterBar } from "@/components/resources/filter-bar";
+import { PaginationControls } from "@/components/resources/pagination-controls";
+import { SearchBar } from "@/components/resources/search-bar";
+import { HeroParticles } from "@/components/resources/hero-particles";
+import { SuggestResourceDialog } from "@/components/resources/suggest-dialog";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import Image from "next/image";
-import { VrmViewer } from "@/components/vrm-viewer";
-import { WavePath } from "@/components/ui/wave-path";
-import ThreeDMarquee from "@/components/ui/3d-marquee";
-import { Construction } from "lucide-react";
-// Static resource images for the marquee background — self-hosted WebP files
-const RESOURCE_IMAGES = Array.from(
-  { length: 40 },
-  (_, i) => `/images/resources/resource-${String(i + 1).padStart(2, "0")}.webp`
-);
 
-export default function Home() {
+// Always per-request (favorites depend on the auth cookie); prevents the
+// build from executing the asset fetch during prerendering.
+export const dynamic = "force-dynamic";
+
+export default async function ResourcesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tags?: string; sources?: string; page?: string; q?: string }>;
+}) {
+  const { tags: tagsParam, sources: sourcesParam, page: pageStr, q } = await searchParams;
+  const page = Math.max(1, Number(pageStr) || 1);
+  const tags = tagsParam ? tagsParam.split(",").filter(Boolean) : [];
+  const sources = sourcesParam ? sourcesParam.split(",").filter(Boolean) : [];
+
+  // Parallelize independent data fetches
+  const [assetsResult, user] = await Promise.all([
+    getAssets({
+      tags: tags.length > 0 ? tags : undefined,
+      sources: sources.length > 0 ? sources : undefined,
+      page,
+      q,
+    }),
+    getCurrentUser(),
+  ]);
+  const { assets, totalCount, totalPages } = assetsResult;
+
+  const favoriteIds = user
+    ? await getFavoriteIds(
+        user.uid,
+        assets.map((a) => a.id)
+      )
+    : new Set<string>();
+
+  const hasFilters = !!(tags.length || sources.length || q);
+
   return (
     <main>
-      {/* Hero */}
-      <section className="relative flex flex-col overflow-hidden lg:min-h-[80vh] lg:justify-center">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-pink-500/5" />
-        <div className="relative mx-auto flex w-full max-w-7xl items-center justify-between gap-16 px-6 py-12 sm:px-8 lg:px-16 lg:py-20">
-          {/* Left: Text */}
-          <div className="max-w-xl flex-1">
-            <Badge variant="secondary" className="mb-6">
-              Your VTubing Journey Starts Here
-            </Badge>
-            <h1 className="text-5xl font-bold leading-tight tracking-tight lg:text-6xl">
-              Learn{" "}
-              <span className="bg-gradient-to-r from-primary to-pink-500 bg-clip-text text-transparent">
-                3D VTubing
-              </span>{" "}
-              with CoffeeJG
+      {/* Hero — title, search, particles, waves */}
+      <div className="relative overflow-hidden pb-20">
+        {/* Gradient — uses primary hue so it works in both modes */}
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/12 via-primary/6 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-pink-500/[0.05] via-transparent to-fuchsia-500/[0.05]" />
+
+        {/* Glow orbs — purple + pink to match character */}
+        <div className="absolute left-1/2 top-0 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-primary/12 blur-[140px]" />
+        <div className="absolute -left-24 top-1/3 h-64 w-64 rounded-full bg-pink-500/[0.08] blur-[100px]" />
+        <div className="absolute -right-24 top-1/4 h-64 w-64 rounded-full bg-fuchsia-500/[0.07] blur-[100px]" />
+
+        {/* Interactive particles */}
+        <div className="absolute inset-0">
+          <HeroParticles />
+        </div>
+
+        {/* Content */}
+        <div className="relative mx-auto max-w-7xl px-6 lg:px-10">
+          {/* Title */}
+          <div className="pt-14 text-center lg:pt-16">
+            <h1 className="font-[family-name:var(--font-fredoka)] text-4xl font-semibold tracking-tight text-primary lg:text-5xl">
+              Resource Hub
             </h1>
-            <p className="mt-6 text-xl leading-relaxed text-muted-foreground">
-              Courses, curated resources, and everything you need to become a
-              professional 3D VTuber. From first setup to going live.
+            <p className="mx-auto mt-3 max-w-xl font-[family-name:var(--font-quicksand)] text-base font-medium leading-relaxed text-muted-foreground">
+              Curated assets, overlays, emotes, and tools from creators across the VTubing community.
             </p>
-            <div className="mt-10 flex gap-4">
-              <Link href="/resources">
-                <Button size="lg" className="px-8">
-                  Browse Resources
-                </Button>
-              </Link>
-              <Link href="/courses">
-                <Button size="lg" variant="outline" className="px-8">
-                  View Courses
-                </Button>
-              </Link>
-            </div>
-
-            <div className="mt-12 flex items-center gap-8">
-              <div>
-                <p className="text-2xl font-bold">490+</p>
-                <p className="text-sm text-muted-foreground">Free Assets</p>
-              </div>
-              <Separator orientation="vertical" className="h-10" />
-              <div>
-                <p className="text-2xl font-bold">Free</p>
-                <p className="text-sm text-muted-foreground">Resources</p>
-              </div>
-              <Separator orientation="vertical" className="h-10" />
-              <div>
-                <p className="text-2xl font-bold">Lifetime</p>
-                <p className="text-sm text-muted-foreground">Access</p>
-              </div>
-            </div>
           </div>
 
-          {/* Right: 3D model on desktop only */}
-          <div className="hidden flex-shrink-0 lg:block">
-            <VrmViewer
-              url="/models/3859814441197244330.vrm"
-              className="h-[550px] w-[400px]"
-              showStage
-            />
+          {/* Search bar */}
+          <div className="mx-auto mt-8 max-w-xl">
+            <Suspense>
+              <SearchBar />
+            </Suspense>
+          </div>
+
+          {/* Secondary actions — Favorites + Suggest under the search bar */}
+          <div className="mx-auto mt-3 flex max-w-xl items-center justify-center gap-2 pb-6">
+            <Link
+              href={user ? "/favorites" : "/login?next=/favorites"}
+              className="flex h-10 items-center gap-2 rounded-lg border border-border/50 bg-card/50 px-4 text-sm font-medium text-muted-foreground backdrop-blur-sm transition-colors hover:bg-card hover:text-foreground"
+            >
+              <svg className="h-4 w-4 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+              </svg>
+              Favorites
+            </Link>
+            <SuggestResourceDialog isAuthenticated={!!user} />
           </div>
         </div>
 
-        {/* Mobile: character image centered below text */}
-        <div className="flex justify-center pb-8 lg:hidden">
-          <Image
-            src="/images/hero/coffeejg-figure-compressed.png"
-            alt="CoffeeJG VTuber character"
-            width={280}
-            height={380}
-            className="h-[320px] w-auto object-contain sm:h-[380px]"
-            priority
-          />
+        {/* Layered waves — theme-aware fills */}
+        <div className="absolute bottom-0 left-0 w-full">
+          <svg className="block w-full text-primary/[0.12]" viewBox="0 0 1440 120" fill="none" preserveAspectRatio="none" style={{ height: "80px" }}>
+            <path d="M0,80 C180,120 360,40 540,70 C720,100 900,30 1080,60 C1200,80 1320,50 1440,70 L1440,120 L0,120 Z" fill="currentColor" />
+          </svg>
+          <svg className="absolute bottom-0 left-0 block w-full text-primary/[0.07]" viewBox="0 0 1440 100" fill="none" preserveAspectRatio="none" style={{ height: "65px" }}>
+            <path d="M0,50 C200,90 440,20 660,55 C880,90 1100,25 1320,50 C1380,58 1420,45 1440,50 L1440,100 L0,100 Z" fill="currentColor" />
+          </svg>
+          <svg className="absolute bottom-0 left-0 block w-full" viewBox="0 0 1440 80" fill="none" preserveAspectRatio="none" style={{ height: "50px" }}>
+            <path d="M0,40 C240,70 480,15 720,40 C960,65 1200,20 1440,45 L1440,80 L0,80 Z" fill="var(--background)" />
+          </svg>
         </div>
-      </section>
-
-      {/* Wave divider */}
-      <div className="flex justify-center py-4">
-        <WavePath />
       </div>
 
-      {/* Courses Coming Soon */}
-      <section className="bg-card/50 py-20">
-        <div className="mx-auto max-w-3xl px-8 lg:px-16">
-          <div className="flex flex-col items-center text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10">
-              <Construction className="h-7 w-7 text-primary" />
-            </div>
-            <h2 className="mt-6 text-3xl font-bold">Courses Coming Soon</h2>
-            <p className="mt-3 max-w-lg text-lg text-muted-foreground">
-              We&apos;re building comprehensive video courses covering
-              everything from initial setup to advanced streaming techniques.
+      {/* Results */}
+      <div className="mx-auto max-w-7xl px-6 lg:px-10">
+        {/* Toolbar — filter button + active pills + count */}
+        <div className="flex flex-wrap items-center gap-3 pb-5">
+          <Suspense>
+            <FilterBar />
+          </Suspense>
+          <span className="ml-auto text-sm text-muted-foreground">
+            {totalCount === 0
+              ? "No resources found"
+              : `${totalCount} resource${totalCount !== 1 ? "s" : ""}`}
+          </span>
+        </div>
+
+        {/* Grid */}
+        {assets.length > 0 ? (
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {assets.map((asset, i) => (
+              <AssetCard
+                key={asset.id}
+                asset={asset}
+                isFavorited={favoriteIds.has(asset.id)}
+                priority={i < 4}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/50 py-20 text-center">
+            <svg className="h-12 w-12 text-muted-foreground/30" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+            </svg>
+            <p className="mt-4 text-lg font-medium">No resources found</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Try adjusting your search or filters.
             </p>
-            <div className="mt-8">
-              <Link href="/courses">
-                <Button variant="outline" size="lg" className="px-8">
-                  Learn More
-                </Button>
-              </Link>
-            </div>
           </div>
-        </div>
-      </section>
+        )}
 
-      {/* Resource Hub CTA */}
-      <section className="relative overflow-hidden py-20">
-        <div className="absolute inset-0">
-          <ThreeDMarquee images={RESOURCE_IMAGES} className="h-full" />
+        <div className="pb-10">
+          <Suspense>
+            <PaginationControls currentPage={page} totalPages={totalPages} />
+          </Suspense>
         </div>
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-background/70 to-background" />
-        <div className="relative mx-auto max-w-7xl px-8 lg:px-16">
-          <div className="mx-auto max-w-2xl text-center">
-            <div className="rounded-2xl bg-background/80 px-8 py-12 backdrop-blur-sm">
-              <Badge variant="outline" className="mb-4 border-primary/30 text-primary">
-                100% Free
-              </Badge>
-              <h2 className="text-3xl font-bold">Resource Hub</h2>
-              <p className="mt-3 text-lg text-muted-foreground leading-relaxed">
-                Browse free VTuber assets, tools, and references. Filter by
-                category, save your favorites, and find everything you need in
-                one place.
-              </p>
-              <div className="mt-8">
-                <Link href="/resources">
-                  <Button size="lg" className="px-8">
-                    Browse Resources
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
+      </div>
     </main>
   );
 }

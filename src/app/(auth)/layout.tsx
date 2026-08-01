@@ -36,28 +36,28 @@ export default function AuthLayout({
             journey today.
           </h2>
           <p className="mt-4 max-w-sm text-base leading-relaxed text-white/80">
-            Learn everything from 3D model setup to going live — with
-            step-by-step video courses made for creators.
+            A curated library of free VTuber assets — models, overlays,
+            emotes, and tools, all in one place.
           </p>
 
           <div className="mt-10 space-y-4">
             <div className="flex items-center gap-3 text-sm text-white/90">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-base">
-                🎬
-              </span>
-              10+ video lessons with Warudo & VTube Studio
-            </div>
-            <div className="flex items-center gap-3 text-sm text-white/90">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-base">
                 🎨
               </span>
-              Free resource hub with curated VTuber assets
+              Hundreds of curated free VTuber assets
             </div>
             <div className="flex items-center gap-3 text-sm text-white/90">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-base">
-                📈
+                ❤️
               </span>
-              Track your progress as you learn
+              Save favorites to your own collection
+            </div>
+            <div className="flex items-center gap-3 text-sm text-white/90">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-base">
+                💡
+              </span>
+              Suggest new resources for the library
             </div>
           </div>
         </div>
