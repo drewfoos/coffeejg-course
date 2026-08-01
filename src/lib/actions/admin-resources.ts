@@ -1,7 +1,8 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { requireAdmin } from "@/lib/auth/require-admin";
+import { ASSETS_CACHE_TAG } from "@/lib/firestore/assets";
 import {
   createAsset,
   deleteAsset,
@@ -130,6 +131,7 @@ export async function createAssetAction(
     revalidatePath("/admin/suggestions");
   }
 
+  updateTag(ASSETS_CACHE_TAG);
   revalidatePath("/admin/assets");
   revalidatePath("/resources");
   return { id };
@@ -139,6 +141,7 @@ export async function deleteAssetAction(assetId: string): Promise<void> {
   await requireAdmin();
   validateId(assetId, "asset ID");
   await deleteAsset(assetId);
+  updateTag(ASSETS_CACHE_TAG);
   revalidatePath("/admin/assets");
   revalidatePath("/resources");
 }

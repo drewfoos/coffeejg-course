@@ -10,6 +10,10 @@ import { HeroParticles } from "@/components/resources/hero-particles";
 import { SuggestResourceDialog } from "@/components/resources/suggest-dialog";
 import Link from "next/link";
 
+// Always per-request (favorites depend on the auth cookie); prevents the
+// build from executing the asset fetch during prerendering.
+export const dynamic = "force-dynamic";
+
 export default async function ResourcesPage({
   searchParams,
 }: {

@@ -3,6 +3,10 @@ import { getCurrentUser } from "@/lib/auth/get-current-user";
 import { isAdminUid } from "@/lib/auth/require-admin";
 import Link from "next/link";
 
+// Admin routes are auth-gated per request; skip build-time prerendering so
+// their Firestore fetches never run during `next build`.
+export const dynamic = "force-dynamic";
+
 export default async function AdminLayout({
   children,
 }: {
