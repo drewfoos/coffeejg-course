@@ -9,6 +9,7 @@ import { DeleteAccountButton } from "@/components/settings/delete-account-button
 import { getAllCourses } from "@/lib/firestore/courses";
 import { getLessonSummaries } from "@/lib/firestore/lessons";
 import { getCourseProgress } from "@/lib/firestore/progress";
+import { COURSES_ENABLED } from "@/lib/feature-flags";
 import Link from "next/link";
 
 async function getSubscriptionDetails(stripeCustomerId: string) {
@@ -43,26 +44,29 @@ export default async function SettingsPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  // Parallelize all independent queries
+  // Parallelize all independent queries. Course/subscription queries are
+  // skipped entirely while the course platform is hidden.
   const [enrollmentSnap, userDoc, courses] = await Promise.all([
-    adminDb
-      .collection("enrollments")
-      .where("userId", "==", user.uid)
-      .where("status", "==", "active")
-      .where("livemode", "==", stripeLiveMode)
-      .limit(1)
-      .get(),
+    COURSES_ENABLED
+      ? adminDb
+          .collection("enrollments")
+          .where("userId", "==", user.uid)
+          .where("status", "==", "active")
+          .where("livemode", "==", stripeLiveMode)
+          .limit(1)
+          .get()
+      : null,
     adminDb.collection("users").doc(user.uid).get(),
-    getAllCourses(),
+    COURSES_ENABLED ? getAllCourses() : [],
   ]);
 
-  const hasEnrollment = !enrollmentSnap.empty;
+  const hasEnrollment = !!enrollmentSnap && !enrollmentSnap.empty;
   const enrollment = hasEnrollment ? enrollmentSnap.docs[0].data() : null;
   const userData = userDoc.data();
 
   // Resolve Stripe customer ID (with fallback to purchase records)
   let stripeCustomerId = userData?.stripeCustomerId ?? null;
-  if (!stripeCustomerId) {
+  if (COURSES_ENABLED && !stripeCustomerId) {
     const purchaseSnap = await adminDb
       .collection("purchases")
       .where("userId", "==", user.uid)
@@ -199,7 +203,8 @@ export default async function SettingsPage() {
         </div>
       </section>
 
-      {/* Subscription Status */}
+      {/* Subscription Status — hidden while the course platform is off */}
+      {COURSES_ENABLED && (
       <section className="mt-6 rounded-lg border border-border/50 bg-card p-6">
         <h2 className="mb-4 text-lg font-semibold">Subscription</h2>
 
@@ -373,9 +378,10 @@ export default async function SettingsPage() {
           </div>
         )}
       </section>
+      )}
 
       {/* Course Progress */}
-      {hasEnrollment && courseProgress.length > 0 && (
+      {COURSES_ENABLED && hasEnrollment && courseProgress.length > 0 && (
         <section className="mt-6 rounded-lg border border-border/50 bg-card p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Course Progress</h2>

@@ -20,11 +20,11 @@ export default function NotFound() {
       </p>
       <div className="mt-8 flex gap-3">
         <Link href="/">
-          <Button size="lg">Go Home</Button>
+          <Button size="lg">Browse Resources</Button>
         </Link>
-        <Link href="/courses">
+        <Link href="/favorites">
           <Button size="lg" variant="outline">
-            Browse Courses
+            My Favorites
           </Button>
         </Link>
       </div>
