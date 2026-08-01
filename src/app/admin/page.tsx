@@ -3,8 +3,12 @@ import { getLessons } from "@/lib/firestore/lessons";
 import Link from "next/link";
 import { DeleteCourseButton } from "@/components/admin/delete-course-button";
 import { CreateCourseForm } from "@/components/admin/create-course-form";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 export default async function AdminDashboard() {
+  // Auth before any data access: the admin layout's redirect renders in
+  // parallel with this page, so it does NOT stop these Firestore reads.
+  await requireAdmin();
   const courses = await getAllCourses();
 
   // Fetch lesson counts in parallel

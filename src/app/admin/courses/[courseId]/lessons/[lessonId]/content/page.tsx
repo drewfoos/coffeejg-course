@@ -3,12 +3,16 @@ import { getCourse } from "@/lib/firestore/courses";
 import { getLesson } from "@/lib/firestore/lessons";
 import Link from "next/link";
 import { ContentEditorPage } from "@/components/admin/content-editor-page";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 export default async function LessonContentPage({
   params,
 }: {
   params: Promise<{ courseId: string; lessonId: string }>;
 }) {
+  // Auth before any data access: the admin layout's redirect renders in
+  // parallel with this page, so it does NOT stop these Firestore reads.
+  await requireAdmin();
   const { courseId, lessonId } = await params;
   const [course, lesson] = await Promise.all([
     getCourse(courseId),

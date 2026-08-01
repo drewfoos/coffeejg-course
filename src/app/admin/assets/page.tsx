@@ -1,8 +1,12 @@
 import Link from "next/link";
 import { listAssets } from "@/lib/firestore/admin-assets";
 import { DeleteAssetButton } from "@/components/admin/delete-asset-button";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 export default async function AdminAssetsPage() {
+  // Auth before any data access: the admin layout's redirect renders in
+  // parallel with this page, so it does NOT stop these Firestore reads.
+  await requireAdmin();
   const assets = await listAssets(100);
 
   return (
