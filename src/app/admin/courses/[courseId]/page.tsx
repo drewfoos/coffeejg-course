@@ -5,12 +5,16 @@ import Link from "next/link";
 import { EditCourseForm } from "@/components/admin/edit-course-form";
 import { LessonList } from "@/components/admin/lesson-list";
 import { CreateLessonForm } from "@/components/admin/create-lesson-form";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 export default async function AdminCoursePage({
   params,
 }: {
   params: Promise<{ courseId: string }>;
 }) {
+  // Auth before any data access: the admin layout's redirect renders in
+  // parallel with this page, so it does NOT stop these Firestore reads.
+  await requireAdmin();
   const { courseId } = await params;
   const [course, lessons] = await Promise.all([
     getCourse(courseId),

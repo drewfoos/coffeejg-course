@@ -1,12 +1,16 @@
 import { getUsers, searchUsers } from "@/lib/firestore/admin-users";
 import Link from "next/link";
 import { UserSearchForm } from "@/components/admin/user-search-form";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 export default async function AdminUsersPage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string; after?: string }>;
 }) {
+  // Auth before any data access: the admin layout's redirect renders in
+  // parallel with this page, so it does NOT stop these Firestore reads.
+  await requireAdmin();
   const params = await searchParams;
   const query = params.q?.trim() ?? "";
   const after = params.after ?? "";
