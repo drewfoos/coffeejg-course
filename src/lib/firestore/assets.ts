@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { adminDb } from "@/lib/firebase/admin";
 import { PAGE_SIZE } from "@/lib/constants";
 import type { Asset } from "@/lib/types";
@@ -21,107 +22,86 @@ interface GetAssetsResult {
   totalPages: number;
 }
 
+export const ASSETS_CACHE_TAG = "assets";
+
+/**
+ * The entire assets collection (~500 small docs, well under cache size
+ * limits), fetched at most once per revalidate window. Every public listing,
+ * search, and filter request is served from this cached list instead of
+ * hitting Firestore — without this, filtered requests re-read the whole
+ * collection and free-tier read quota gets exhausted by crawler traffic.
+ * Admin asset mutations call revalidateTag(ASSETS_CACHE_TAG) for freshness.
+ */
+const getAllAssets = unstable_cache(
+  async (): Promise<AssetWithId[]> => {
+    const snapshot = await adminDb
+      .collection("assets")
+      .orderBy("createdAt", "desc")
+      .get();
+    return snapshot.docs.map((doc) =>
+      serializeDoc({ id: doc.id, ...(doc.data() as Asset) })
+    );
+  },
+  ["all-assets"],
+  { revalidate: 300, tags: [ASSETS_CACHE_TAG] }
+);
+
 export async function getAssets(
   options: GetAssetsOptions
 ): Promise<GetAssetsResult> {
   const { tags, sources, q, page = 1 } = options;
 
-  const needsMemoryFilter = (tags && tags.length > 0) || (sources && sources.length > 1) || q;
+  let assets = await getAllAssets();
 
-  let baseQuery: FirebaseFirestore.Query = adminDb.collection("assets");
-
-  // Firestore can handle one array-contains and one "in" natively.
-  // For multiple tags we must filter in memory.
-  if (tags && tags.length === 1) {
-    baseQuery = baseQuery.where("tags", "array-contains", tags[0]);
+  // Tag/source filters are OR within each facet, matching the previous
+  // Firestore semantics (array-contains / "in").
+  if (tags && tags.length > 0) {
+    assets = assets.filter((a) => tags.some((t) => a.tags.includes(t)));
   }
 
-  if (sources && sources.length === 1) {
-    baseQuery = baseQuery.where("source", "==", sources[0]);
-  } else if (sources && sources.length > 1 && sources.length <= 30) {
-    baseQuery = baseQuery.where("source", "in", sources);
+  if (sources && sources.length > 0) {
+    assets = assets.filter((a) => sources.includes(a.source));
   }
 
-  if (needsMemoryFilter) {
-    const snapshot = await baseQuery.orderBy("createdAt", "desc").get();
-    let allAssets = snapshot.docs.map((doc) =>
-      serializeDoc({ id: doc.id, ...(doc.data() as Asset) })
+  if (q) {
+    const lower = q.toLowerCase();
+    assets = assets.filter(
+      (a) =>
+        a.title.toLowerCase().includes(lower) ||
+        a.artistName.toLowerCase().includes(lower) ||
+        a.description.toLowerCase().includes(lower) ||
+        a.tags.some((t) => t.toLowerCase().includes(lower))
     );
-
-    if (tags && tags.length > 1) {
-      allAssets = allAssets.filter((a) =>
-        tags.some((t) => a.tags.includes(t))
-      );
-    }
-
-    if (q) {
-      const lower = q.toLowerCase();
-      allAssets = allAssets.filter(
-        (a) =>
-          a.title.toLowerCase().includes(lower) ||
-          a.artistName.toLowerCase().includes(lower) ||
-          a.description.toLowerCase().includes(lower) ||
-          a.tags.some((t) => t.toLowerCase().includes(lower))
-      );
-    }
-
-    const totalCount = allAssets.length;
-    const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
-    const safePage = Math.max(1, Math.min(page, totalPages));
-    const offset = (safePage - 1) * PAGE_SIZE;
-    const assets = allAssets.slice(offset, offset + PAGE_SIZE);
-
-    return { assets, totalCount, page: safePage, totalPages };
   }
 
-  // Simple case — run count and paginated fetch in parallel
-  const offset = (page - 1) * PAGE_SIZE;
-  const [countSnapshot, snapshot] = await Promise.all([
-    baseQuery.count().get(),
-    baseQuery.orderBy("createdAt", "desc").offset(offset).limit(PAGE_SIZE).get(),
-  ]);
-
-  const totalCount = countSnapshot.data().count;
+  const totalCount = assets.length;
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const safePage = Math.max(1, Math.min(page, totalPages));
+  const offset = (safePage - 1) * PAGE_SIZE;
 
-  const assets: AssetWithId[] = snapshot.docs.map((doc) =>
-    serializeDoc({ id: doc.id, ...(doc.data() as Asset) })
-  );
-
-  return { assets, totalCount, page: safePage, totalPages };
+  return {
+    assets: assets.slice(offset, offset + PAGE_SIZE),
+    totalCount,
+    page: safePage,
+    totalPages,
+  };
 }
 
 /** Lightweight query that only returns image URLs (for marquee backgrounds, etc.) */
 export async function getAssetImageUrls(limit: number = 50): Promise<string[]> {
-  const snapshot = await adminDb
-    .collection("assets")
-    .select("imageUrl")
-    .limit(limit)
-    .get();
-  return snapshot.docs
-    .map((doc) => (doc.data() as { imageUrl?: string }).imageUrl)
+  const assets = await getAllAssets();
+  return assets
+    .slice(0, limit)
+    .map((a) => a.imageUrl)
     .filter((url): url is string => !!url);
 }
 
 export async function getAssetsByIds(ids: string[]): Promise<AssetWithId[]> {
   if (ids.length === 0) return [];
 
-  // Firestore getAll supports up to 500 docs at a time — batch if needed
-  const BATCH_SIZE = 500;
-  const results: AssetWithId[] = [];
-
-  for (let i = 0; i < ids.length; i += BATCH_SIZE) {
-    const batch = ids.slice(i, i + BATCH_SIZE);
-    const refs = batch.map((id) => adminDb.collection("assets").doc(id));
-    const snapshots = await adminDb.getAll(...refs);
-
-    for (const snap of snapshots) {
-      if (snap.exists) {
-        results.push(serializeDoc({ id: snap.id, ...(snap.data() as Asset) }));
-      }
-    }
-  }
-
-  return results;
+  const assets = await getAllAssets();
+  const byId = new Map(assets.map((a) => [a.id, a]));
+  return ids
+    .map((id) => byId.get(id))
+    .filter((a): a is AssetWithId => a !== undefined);
 }
