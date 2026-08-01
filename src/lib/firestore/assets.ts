@@ -20,6 +20,15 @@ interface GetAssetsResult {
   totalCount: number;
   page: number;
   totalPages: number;
+  /** True when Firestore rejected the read because the daily free-tier quota is spent. */
+  quotaExceeded?: boolean;
+}
+
+/** gRPC code 8 = RESOURCE_EXHAUSTED — Firestore's free-tier daily quota. */
+export function isQuotaExceededError(e: unknown): boolean {
+  return (
+    typeof e === "object" && e !== null && (e as { code?: unknown }).code === 8
+  );
 }
 
 export const ASSETS_CACHE_TAG = "assets";
@@ -56,7 +65,23 @@ export async function getAssets(
 ): Promise<GetAssetsResult> {
   const { tags, sources, q, page = 1 } = options;
 
-  let assets = await getAllAssets();
+  let assets: AssetWithId[];
+  try {
+    assets = await getAllAssets();
+  } catch (e) {
+    // Quota exhaustion gets a friendly page state instead of the error
+    // boundary; anything else is a real bug and should stay loud.
+    if (isQuotaExceededError(e)) {
+      return {
+        assets: [],
+        totalCount: 0,
+        page: 1,
+        totalPages: 1,
+        quotaExceeded: true,
+      };
+    }
+    throw e;
+  }
 
   // Tag/source filters are OR within each facet, matching the previous
   // Firestore semantics (array-contains / "in").

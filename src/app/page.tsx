@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { getAssets } from "@/lib/firestore/assets";
+import { getAssets, isQuotaExceededError } from "@/lib/firestore/assets";
 import { getFavoriteIds } from "@/lib/firestore/favorites";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
 import { AssetCard } from "@/components/resources/asset-card";
@@ -34,14 +34,21 @@ export default async function ResourcesPage({
     }),
     getCurrentUser(),
   ]);
-  const { assets, totalCount, totalPages } = assetsResult;
+  const { assets, totalCount, totalPages, quotaExceeded } = assetsResult;
 
-  const favoriteIds = user
-    ? await getFavoriteIds(
+  // Heart states are cosmetic — if the favorites lookup hits the quota
+  // ceiling, render the page with empty hearts instead of crashing it.
+  let favoriteIds = new Set<string>();
+  if (user) {
+    try {
+      favoriteIds = await getFavoriteIds(
         user.uid,
         assets.map((a) => a.id)
-      )
-    : new Set<string>();
+      );
+    } catch (e) {
+      if (!isQuotaExceededError(e)) throw e;
+    }
+  }
 
   const hasFilters = !!(tags.length || sources.length || q);
 
@@ -119,14 +126,28 @@ export default async function ResourcesPage({
             <FilterBar />
           </Suspense>
           <span className="ml-auto text-sm text-muted-foreground">
-            {totalCount === 0
-              ? "No resources found"
-              : `${totalCount} resource${totalCount !== 1 ? "s" : ""}`}
+            {quotaExceeded
+              ? ""
+              : totalCount === 0
+                ? "No resources found"
+                : `${totalCount} resource${totalCount !== 1 ? "s" : ""}`}
           </span>
         </div>
 
         {/* Grid */}
-        {assets.length > 0 ? (
+        {quotaExceeded ? (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-primary/30 bg-primary/[0.03] py-20 text-center">
+            <span className="text-5xl">☕</span>
+            <p className="mt-5 font-[family-name:var(--font-fredoka)] text-xl font-medium">
+              The coffee pot needs a refill
+            </p>
+            <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
+              We&apos;ve hit our free daily database limit, so the library is
+              taking a short break. It resets within 24 hours — check back
+              soon, everything will still be here!
+            </p>
+          </div>
+        ) : assets.length > 0 ? (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {assets.map((asset, i) => (
               <AssetCard
